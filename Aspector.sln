@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35825.156 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspector", "Aspector.csproj", "{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspector.Core", "..\Aspector.Core\Aspector.Core.csproj", "{1CC1F9D9-3937-4143-B34C-198346132E76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CC1F9D9-3937-4143-B34C-198346132E76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CC1F9D9-3937-4143-B34C-198346132E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CC1F9D9-3937-4143-B34C-198346132E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CC1F9D9-3937-4143-B34C-198346132E76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
