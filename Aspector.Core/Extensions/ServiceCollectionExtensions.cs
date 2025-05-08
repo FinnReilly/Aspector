@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Implementations;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -11,12 +12,63 @@ namespace Aspector.Core.Extensions
         {
             services.AddSingleton(new ProxyGenerator());
 
-            var decoratedTypes = Assembly.GetExecutingAssembly().GetTypes()
+            var allTypes = Assembly.GetExecutingAssembly().GetTypes();
+
+            var usedAttributes = new HashSet<Type>();
+            var decoratedTypes = allTypes
                 .Where(
                     t =>
-                        t.GetMembers(BindingFlags.Public | BindingFlags.Instance)
-                            .Any(m => m.GetCustomAttributes().Any(attr => attr.GetType().IsAssignableTo(typeof(AspectAttribute)))))
+                        {
+                            var decorators = t.GetMembers(BindingFlags.Public | BindingFlags.Instance)
+                                .SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
+                            
+                            if (decorators.Any())
+                            {
+                                foreach(var decorator in decorators)
+                                {
+                                    usedAttributes.Add(decorator.AttributeType);
+                                }
+
+                                return true;
+                            }
+
+                            return false;
+                        })
                 .ToHashSet();
+
+            var implementationDictionary = new Dictionary<Type, Type>();
+            var requiredImplementationTypes = allTypes.Where(
+                t =>
+                    { 
+                        if (t.IsAbstract || !t.IsAssignableTo(typeof(BaseAspectImplementation<>)))
+                        {
+                            return false;
+                        }
+
+                        var aspectArgumentType = t.GetGenericArguments().First(arg => arg.IsAssignableTo(typeof(AspectAttribute)));
+                        if (usedAttributes.Contains(aspectArgumentType))
+                        {
+                            implementationDictionary.Add(aspectArgumentType, t);
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+
+            foreach(var attributeType in decoratedTypes)
+            {
+                if (!implementationDictionary.ContainsKey(attributeType))
+                {
+                    throw new NotImplementedException($"There is no aspect implementation corresponding to the aspect attribute {attributeType.FullName}");
+                }
+            }
+
+            // add required implementations, as singleton for now
+            foreach (var type in requiredImplementationTypes)
+            {
+                services.AddSingleton(type);
+            }
 
             var applicableServicesInContainer = services.Where(
                 descriptor => descriptor.ImplementationInstance != null 
@@ -28,7 +80,9 @@ namespace Aspector.Core.Extensions
                 var applicableAspects = serviceDescriptor
                     .ImplementationType!
                     .GetMembers(BindingFlags.Public | BindingFlags.Instance)
-                    .SelectMany(m => m.CustomAttributes.Where(a => a.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
+                    .SelectMany(m => m.CustomAttributes.Where(a => a.AttributeType.IsAssignableTo(typeof(AspectAttribute))))
+                    .Select(a => a.AttributeType)
+                    .Distinct();
 
                 services.Remove(serviceDescriptor);
 
@@ -37,8 +91,9 @@ namespace Aspector.Core.Extensions
                     factory: (provider) =>
                     {
                         var generator = provider.GetRequiredService<ProxyGenerator>();
+                        var aspectImplementations = applicableAspects.Select(aspect => provider.GetRequiredService(implementationDictionary[aspect]));
 
-                        return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, applicableAspects);
+                        return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, aspectImplementations);
                     },
                     serviceDescriptor.Lifetime));
             }
