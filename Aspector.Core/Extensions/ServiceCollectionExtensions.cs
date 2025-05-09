@@ -1,7 +1,8 @@
 ﻿using Aspector.Core.Attributes;
-using Aspector.Core.Implementations;
 using Castle.DynamicProxy;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
 
 namespace Aspector.Core.Extensions
@@ -11,8 +12,12 @@ namespace Aspector.Core.Extensions
         public static IServiceCollection AddAspects(this IServiceCollection services)
         {
             services.AddSingleton(new ProxyGenerator());
+            if (!services.Any(s => s.ServiceType == typeof(IMemoryCache)))
+            {
+                services.AddMemoryCache();
+            }
 
-            var allTypes = Assembly.GetExecutingAssembly().GetTypes();
+            var allTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes());
 
             var usedAttributes = new HashSet<Type>();
             var decoratedTypes = allTypes
@@ -37,26 +42,44 @@ namespace Aspector.Core.Extensions
                 .ToHashSet();
 
             var implementationDictionary = new Dictionary<Type, Type>();
+            var baseAspectType = typeof(BaseAspectImplementation<>);
+            var assignableTypes = usedAttributes.Select(t => baseAspectType.MakeGenericType([t]));
             var requiredImplementationTypes = allTypes.Where(
                 t =>
                     { 
-                        if (t.IsAbstract || !t.IsAssignableTo(typeof(BaseAspectImplementation<>)))
+                        if (t.IsAbstract)
                         {
                             return false;
                         }
 
-                        var aspectArgumentType = t.GetGenericArguments().First(arg => arg.IsAssignableTo(typeof(AspectAttribute)));
+                        var matchingAssignableType = assignableTypes.Where(aType => t.IsAssignableTo(aType)).FirstOrDefault();
+                        if (matchingAssignableType == null)
+                        {
+                            return false;
+                        }
+
+                        var aspectArgumentType = matchingAssignableType
+                            .GetGenericArguments()
+                            .First(arg => arg.IsAssignableTo(typeof(AspectAttribute)));
+
                         if (usedAttributes.Contains(aspectArgumentType))
                         {
+                            if (implementationDictionary.TryGetValue(aspectArgumentType, out var existingImplementation))
+                            {
+                                throw new InvalidOperationException(
+                                    $"Only one aspect implementation can inherit from BaseAspectImplementation<{aspectArgumentType.FullName}>," +
+                                    $" but both {existingImplementation.FullName} and {t.FullName} implement this abstract class");
+                            }
+
                             implementationDictionary.Add(aspectArgumentType, t);
                             return true;
                         }
 
                         return false;
-                    });
+                    }).ToList();
 
 
-            foreach(var attributeType in decoratedTypes)
+            foreach(var attributeType in usedAttributes)
             {
                 if (!implementationDictionary.ContainsKey(attributeType))
                 {
@@ -71,8 +94,7 @@ namespace Aspector.Core.Extensions
             }
 
             var applicableServicesInContainer = services.Where(
-                descriptor => descriptor.ImplementationInstance != null 
-                    && descriptor.ServiceType.IsInterface
+                descriptor => descriptor.ServiceType.IsInterface
                     && decoratedTypes.Contains(descriptor.ImplementationType!));
 
             foreach(var serviceDescriptor in applicableServicesInContainer)
@@ -84,16 +106,16 @@ namespace Aspector.Core.Extensions
                     .Select(a => a.AttributeType)
                     .Distinct();
 
-                services.Remove(serviceDescriptor);
 
-                services.Add(new ServiceDescriptor(
+                services.Replace(new ServiceDescriptor(
                     serviceDescriptor.ServiceType,
                     factory: (provider) =>
                     {
                         var generator = provider.GetRequiredService<ProxyGenerator>();
-                        var aspectImplementations = applicableAspects.Select(aspect => provider.GetRequiredService(implementationDictionary[aspect]));
+                        var target = provider.GetRequiredService(serviceDescriptor.ServiceType);
+                        var aspectImplementations = applicableAspects.Select(aspect => (IInterceptor)provider.GetRequiredService(implementationDictionary[aspect])).ToArray();
 
-                        return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, aspectImplementations);
+                        return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, target: target, interceptors: aspectImplementations);
                     },
                     serviceDescriptor.Lifetime));
             }

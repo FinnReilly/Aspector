@@ -1,4 +1,5 @@
-﻿using Aspector.Models;
+﻿using Aspector.Core.Attributes;
+using Aspector.Models;
 
 namespace Aspector.Services
 {
@@ -9,6 +10,7 @@ namespace Aspector.Services
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
+        [CacheResult(timeToCacheMilliseconds: 50000, slidingExpiration: false)]
         public IEnumerable<WeatherForecast> GetWeather()
         {
             var forecast = Enumerable.Range(1, 5).Select(index =>
