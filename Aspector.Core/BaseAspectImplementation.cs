@@ -14,15 +14,16 @@ namespace Aspector.Core
 
         public void Intercept(IInvocation invocation)
         {
-            if (!_perMethodAspectParameters.TryGetValue(invocation.Method, out var aspectParameters))
+            var aspectParameters = Enumerable.Empty<TAspect>();
+            if (invocation.MethodInvocationTarget != null && !_perMethodAspectParameters.TryGetValue(invocation.MethodInvocationTarget, out aspectParameters))
             {
-                var actualAttributes = invocation.Method.GetCustomAttributes<TAspect>();
+                var actualAttributes = invocation.MethodInvocationTarget.GetCustomAttributes<TAspect>();
 
                 _perMethodAspectParameters.TryAdd(invocation.Method, actualAttributes);
                 aspectParameters = actualAttributes;
             }
 
-            if (aspectParameters == null)
+            if (!aspectParameters.Any())
             {
                 invocation.Proceed();
                 return;

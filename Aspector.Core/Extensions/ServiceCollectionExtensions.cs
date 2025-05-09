@@ -95,7 +95,8 @@ namespace Aspector.Core.Extensions
 
             var applicableServicesInContainer = services.Where(
                 descriptor => descriptor.ServiceType.IsInterface
-                    && decoratedTypes.Contains(descriptor.ImplementationType!));
+                    && decoratedTypes.Contains(descriptor.ImplementationType!))
+                .ToList();
 
             foreach(var serviceDescriptor in applicableServicesInContainer)
             {
@@ -106,18 +107,21 @@ namespace Aspector.Core.Extensions
                     .Select(a => a.AttributeType)
                     .Distinct();
 
-
-                services.Replace(new ServiceDescriptor(
+                var replacement = ServiceDescriptor.Describe(
                     serviceDescriptor.ServiceType,
-                    factory: (provider) =>
+                    implementationFactory: (provider) =>
                     {
                         var generator = provider.GetRequiredService<ProxyGenerator>();
-                        var target = provider.GetRequiredService(serviceDescriptor.ServiceType);
+                        var target = ActivatorUtilities.CreateInstance(provider, serviceDescriptor.ImplementationType);
                         var aspectImplementations = applicableAspects.Select(aspect => (IInterceptor)provider.GetRequiredService(implementationDictionary[aspect])).ToArray();
 
                         return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, target: target, interceptors: aspectImplementations);
                     },
-                    serviceDescriptor.Lifetime));
+                    lifetime: serviceDescriptor.Lifetime);
+
+                var index = services.IndexOf(serviceDescriptor);
+                services.Insert(index, replacement);
+                services.Remove(serviceDescriptor);
             }
             
             return services;
