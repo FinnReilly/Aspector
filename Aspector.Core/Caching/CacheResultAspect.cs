@@ -19,8 +19,7 @@ namespace Aspector.Core.Caching
             var cacheKey = aspectParameter.CacheKey ?? $"{invocation.TargetType?.FullName}.{invocation.Method.Name}";
 
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
-                && cachedValue != null
-                && cachedValue.GetType() == invocation.Method.ReturnType)
+                && cachedValue != null)
             {
                 invocation.ReturnValue = cachedValue;
                 return;
@@ -28,16 +27,17 @@ namespace Aspector.Core.Caching
 
             invocation.Proceed();
 
-            var entry = _memoryCache.CreateEntry(cacheKey);
-            entry.Value = cachedValue;
-            var timeSpan = TimeSpan.FromMilliseconds(aspectParameter.TimeToCacheMilliseconds);
-            if (aspectParameter.SlidingExpiration)
+            using var entry = _memoryCache.CreateEntry(cacheKey);
+            entry.Value = invocation.ReturnValue;
+
+            if (aspectParameter.TimeToCacheMilliseconds.HasValue)
             {
-                entry.SlidingExpiration = timeSpan;
-            }
-            else
-            {
+                var timeSpan = TimeSpan.FromMilliseconds(aspectParameter.TimeToCacheMilliseconds.Value);
                 entry.AbsoluteExpirationRelativeToNow = timeSpan;
+                if (aspectParameter.SlidingExpiration)
+                {
+                    entry.SlidingExpiration = timeSpan;
+                }
             }
         }
     }
