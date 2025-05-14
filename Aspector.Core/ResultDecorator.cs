@@ -1,0 +1,42 @@
+﻿using Aspector.Core.Attributes;
+using Castle.DynamicProxy;
+using System.Reflection;
+
+namespace Aspector.Core
+{
+    public abstract class ResultDecorator<TAspect, TResult> : BaseAspectImplementation<TAspect>
+        where TAspect : AspectAttribute
+    {
+        protected override sealed void Decorate(IInvocation invocation, IEnumerable<TAspect> aspectParameters)
+        {
+            Func<object[]?, TResult> targetMethodAsAction = (args) =>
+            {
+                args = args ?? Array.Empty<object>();
+                for (var i = 0; i < invocation.Arguments.Length; i++)
+                {
+                    if (args[i] != invocation.Arguments[i])
+                    {
+                        invocation.SetArgumentValue(i, args[i]);
+                    }
+                }
+
+                invocation.Proceed();
+                return (TResult)invocation.ReturnValue!;
+            };
+
+            var decoratorResult = Decorate(
+                targetMethodAsAction,
+                invocation.Arguments!,
+                GetMethodParameterMetadata(invocation),
+                aspectParameters);
+
+            invocation.ReturnValue = decoratorResult;
+        }
+
+        protected abstract TResult Decorate(
+            Func<object[]?, TResult> targetMethod,
+            object[]? parameters,
+            IEnumerable<ParameterInfo> parameterMetadata,
+            IEnumerable<TAspect> aspectParameters);
+    }
+}
