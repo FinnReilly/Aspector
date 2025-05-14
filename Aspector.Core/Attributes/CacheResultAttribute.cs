@@ -8,14 +8,14 @@
 
         public CacheResultAttribute() { }
 
-        public CacheResultAttribute(int timeToCacheMilliseconds)
+        public CacheResultAttribute(double timeToCacheSeconds)
         {
-            TimeToCacheMilliseconds = timeToCacheMilliseconds;
+            TimeToCacheMilliseconds = (int)Math.Floor(timeToCacheSeconds * 1000);
         }
 
-        public CacheResultAttribute(int timeToCacheMilliseconds, bool slidingExpiration)
+        public CacheResultAttribute(double timeToCacheSeconds, bool slidingExpiration)
         {
-            TimeToCacheMilliseconds = timeToCacheMilliseconds;
+            TimeToCacheMilliseconds = (int)Math.Floor(timeToCacheSeconds * 1000);
             SlidingExpiration = slidingExpiration;
         }
     }

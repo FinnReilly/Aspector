@@ -10,7 +10,7 @@ namespace Aspector.Services
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        [CacheResult(timeToCacheMilliseconds: 10000, slidingExpiration: false)]
+        [CacheResult(timeToCacheSeconds: 10, slidingExpiration: false)]
         public IEnumerable<WeatherForecast> GetWeather()
         {
             var forecast = Enumerable.Range(1, 5).Select(index =>
