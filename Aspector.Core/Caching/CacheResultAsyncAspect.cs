@@ -1,13 +1,7 @@
 ﻿using Aspector.Core.Attributes.Caching;
-using Castle.Components.DictionaryAdapter.Xml;
-using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aspector.Core.Caching
 {
@@ -15,7 +9,8 @@ namespace Aspector.Core.Caching
     {
         private readonly IMemoryCache _memoryCache;
 
-        public CacheResultAsyncAspect(IMemoryCache memoryCache)
+        public CacheResultAsyncAspect(IMemoryCache memoryCache, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _memoryCache = memoryCache;
         }

@@ -1,14 +1,16 @@
 ﻿using Aspector.Core.Attributes.Caching;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace Aspector.Core.Caching
 {
-    public class CacheResultAspect : BaseAspectImplementation<CacheResultAttribute>
+    public class CacheResultAspect : BaseDecorator<CacheResultAttribute>
     {
         private readonly IMemoryCache _memoryCache;
 
-        public CacheResultAspect(IMemoryCache memoryCache)
+        public CacheResultAspect(IMemoryCache memoryCache, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _memoryCache = memoryCache;
         }

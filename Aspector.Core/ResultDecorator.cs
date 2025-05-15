@@ -1,12 +1,18 @@
 ﻿using Aspector.Core.Attributes;
 using Castle.DynamicProxy;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 
 namespace Aspector.Core
 {
-    public abstract class ResultDecorator<TAspect, TResult> : BaseAspectImplementation<TAspect>
+    public abstract class ResultDecorator<TAspect, TResult> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
     {
+        protected ResultDecorator(ILoggerFactory loggerFactory) 
+            : base(loggerFactory)
+        {
+        }
+
         protected override sealed void Decorate(IInvocation invocation, IEnumerable<TAspect> aspectParameters)
         {
             Func<object[]?, TResult> targetMethodAsAction = (args) =>

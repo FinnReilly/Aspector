@@ -42,7 +42,7 @@ namespace Aspector.Core.Extensions
                 .ToHashSet();
 
             var implementationDictionary = new Dictionary<Type, Type>();
-            var baseAspectType = typeof(BaseAspectImplementation<>);
+            var baseAspectType = typeof(BaseDecorator<>);
             var assignableTypes = usedAttributes.Select(t => baseAspectType.MakeGenericType([t]));
             var requiredImplementationTypes = allTypes.Where(
                 t =>

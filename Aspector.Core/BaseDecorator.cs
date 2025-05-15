@@ -1,15 +1,25 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace Aspector.Core
 {
-    public abstract class BaseAspectImplementation<TAspect> : IInterceptor
+    public abstract class BaseDecorator<TAspect> : IInterceptor
         where TAspect : AspectAttribute
     {
         private ConcurrentDictionary<MethodInfo, IEnumerable<TAspect>> _perMethodAspectParameters = new ConcurrentDictionary<MethodInfo, IEnumerable<TAspect>>();
+
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly Type _thisType;
+
+        public BaseDecorator(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+            _thisType = this.GetType();
+        }
 
         public Type AttributeType { get; } = typeof(TAspect);
 
@@ -46,5 +56,9 @@ namespace Aspector.Core
         }
 
         protected abstract void Decorate(IInvocation invocation, IEnumerable<TAspect> aspectParameters);
+
+        private string LoggerName(Type targetType) => $"{targetType.FullName}:{_thisType.FullName}";
+        
+        protected ILogger GetLogger(Type targetType) => _loggerFactory.CreateLogger(LoggerName(targetType));
     }
 }
