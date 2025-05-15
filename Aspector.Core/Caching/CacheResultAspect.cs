@@ -1,4 +1,4 @@
-﻿using Aspector.Core.Attributes;
+﻿using Aspector.Core.Attributes.Caching;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
 

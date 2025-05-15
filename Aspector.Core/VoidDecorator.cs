@@ -25,14 +25,14 @@ namespace Aspector.Core
             Decorate(
                 targetMethodAsAction,
                 invocation.Arguments!,
-                GetMethodParameterMetadata(invocation),
+                (GetMethodParameterMetadata(invocation), invocation.Method, invocation.TargetType!),
                 aspectParameters);
         }
 
         protected abstract void Decorate(
             Action<object[]?> targetMethod,
             object[]? parameters,
-            IEnumerable<ParameterInfo> parameterMetadata,
+            (IEnumerable<ParameterInfo> ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
             IEnumerable<TAspect> aspectParameters);
     }
 }

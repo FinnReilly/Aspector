@@ -1,4 +1,4 @@
-﻿namespace Aspector.Core.Attributes
+﻿namespace Aspector.Core.Attributes.Caching
 {
     public class CacheResultAttribute : AspectAttribute
     {

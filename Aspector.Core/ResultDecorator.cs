@@ -27,7 +27,7 @@ namespace Aspector.Core
             var decoratorResult = Decorate(
                 targetMethodAsAction,
                 invocation.Arguments!,
-                GetMethodParameterMetadata(invocation),
+                (GetMethodParameterMetadata(invocation), invocation.Method, invocation.TargetType!),
                 aspectParameters);
 
             invocation.ReturnValue = decoratorResult;
@@ -36,7 +36,7 @@ namespace Aspector.Core
         protected abstract TResult Decorate(
             Func<object[]?, TResult> targetMethod,
             object[]? parameters,
-            IEnumerable<ParameterInfo> parameterMetadata,
+            (IEnumerable<ParameterInfo> ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
             IEnumerable<TAspect> aspectParameters);
     }
 }
