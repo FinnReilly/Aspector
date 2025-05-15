@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Attributes.Caching;
+using Aspector.Core.Attributes.Logging;
 using Aspector.Models;
 
 namespace Aspector.Services
@@ -11,9 +12,24 @@ namespace Aspector.Services
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
+        private readonly ILogger<WeatherService> _logger;
+
+        public WeatherService(ILogger<WeatherService> logger)
+        {
+            _logger = logger;
+        }
+
+        [AddLogProperty("IsFromCache", ConstantValue = true)]
+        [AddLogProperty("QueryType", ConstantValue = "Weather")]
         [CacheResult(timeToCacheSeconds: 10, slidingExpiration: false)]
         public IEnumerable<WeatherForecast> GetWeather()
         {
+            using var logScope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["IsFromCache"] = false
+            });
+
+            _logger.LogInformation("Getting fresh data");
             var forecast = Enumerable.Range(1, 5).Select(index =>
             new WeatherForecast
             (

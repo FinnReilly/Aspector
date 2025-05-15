@@ -42,7 +42,7 @@ namespace Aspector.Core
         protected abstract TResult Decorate(
             Func<object[]?, TResult> targetMethod,
             object[]? parameters,
-            (IEnumerable<ParameterInfo> ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
             IEnumerable<TAspect> aspectParameters);
     }
 }

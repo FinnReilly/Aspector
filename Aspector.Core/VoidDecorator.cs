@@ -38,7 +38,7 @@ namespace Aspector.Core
         protected abstract void Decorate(
             Action<object[]?> targetMethod,
             object[]? parameters,
-            (IEnumerable<ParameterInfo> ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
             IEnumerable<TAspect> aspectParameters);
     }
 }

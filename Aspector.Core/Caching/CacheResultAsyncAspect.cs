@@ -15,7 +15,11 @@ namespace Aspector.Core.Caching
             _memoryCache = memoryCache;
         }
 
-        protected override async Task<object> Decorate(Func<object[]?, Task<object>> targetMethod, object[]? parameters, (IEnumerable<ParameterInfo> ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext, IEnumerable<CacheResultAsyncAttribute> aspectParameters)
+        protected override async Task<object> Decorate(
+            Func<object[]?, Task<object>> targetMethod,
+            object[]? parameters,
+            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            IEnumerable<CacheResultAsyncAttribute> aspectParameters)
         {
             var firstArg = aspectParameters.First();
             var cacheKey = firstArg.CacheKey ?? $"{decorationContext.DecoratedType.FullName}.{decorationContext.DecoratedMethod.Name}";

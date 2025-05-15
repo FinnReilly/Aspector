@@ -14,6 +14,15 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
-app.MapGet("/weatherforecast", (IWeatherService service) => service.GetWeather());
+app.MapGet(
+    "/weatherforecast",
+    (IWeatherService service, ILogger<Program> logger) => 
+    {
+        using var logScope = logger.BeginScope(new Dictionary<string, object>
+        {
+            { "QueryType", "WeatherOfCourse" }
+        });
+        return service.GetWeather();
+    });
 
 app.Run();
