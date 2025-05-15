@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -9,7 +10,6 @@ namespace Aspector.Core
         where TAspect : AspectAttribute
     {
         private ConcurrentDictionary<MethodInfo, IEnumerable<TAspect>> _perMethodAspectParameters = new ConcurrentDictionary<MethodInfo, IEnumerable<TAspect>>();
-        private ConcurrentDictionary<MethodInfo, ParameterInfo[]> _perMethodParameters = new ConcurrentDictionary<MethodInfo, ParameterInfo[]>();
 
         public Type AttributeType { get; } = typeof(TAspect);
 
@@ -35,10 +35,11 @@ namespace Aspector.Core
 
         protected ParameterInfo[] GetMethodParameterMetadata(IInvocation invocation)
         {
-            if (!_perMethodParameters.TryGetValue(invocation.Method, out var parameters))
+            var parameterDictionary = CachedReflection.ParametersByMethod;
+            if (!parameterDictionary.TryGetValue(invocation.Method, out var parameters))
             {
                 parameters = invocation.Method.GetParameters();
-                _perMethodParameters[invocation.Method] = parameters;
+                parameterDictionary[invocation.Method] = parameters;
             }
 
             return parameters;
