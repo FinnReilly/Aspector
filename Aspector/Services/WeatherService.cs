@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Attributes.Caching;
 using Aspector.Models;
 
 namespace Aspector.Services
