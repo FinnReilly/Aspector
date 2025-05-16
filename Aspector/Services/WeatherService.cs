@@ -21,7 +21,9 @@ namespace Aspector.Services
 
         [AddLogProperty("IsFromCache", ConstantValue = true)]
         [AddLogProperty("QueryType", ConstantValue = "Weather")]
+        [Log("Will check cache for result first")]
         [CacheResult(timeToCacheSeconds: 10, slidingExpiration: false)]
+        [Log("Cache must have expired, refreshing", LogLevel.Warning)]
         public IEnumerable<WeatherForecast> GetWeather()
         {
             using var logScope = _logger.BeginScope(new Dictionary<string, object>
