@@ -1,0 +1,79 @@
+﻿using Aspector.Core.Attributes;
+using Aspector.Core.Attributes.Caching;
+using Aspector.Core.Attributes.Logging;
+using Aspector.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Aspector.Core.Tests.Models
+{
+    [TestFixture]
+    public class AspectAttributeSummaryTests
+    {
+        private MethodInfo _method1Info;
+        private MethodInfo _method2Info;
+
+        [SetUp]
+        public void Setup()
+        {
+            var fakeType = typeof(FakeClass);
+            _method1Info = fakeType.GetMethod("Method1")!;
+            _method2Info = fakeType.GetMethod("Method2")!;
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ConstructorTestCases))]
+        public void Constructor_CorrectlyChoosesBestWrapOrder(
+            AspectAttribute[] method1Attributes,
+            AspectAttribute[] method2Attributes,
+            List<(Type, int)> expectedWrapOrder)
+        {
+            // Act
+            var model = new AspectAttributeSummary([
+                (_method1Info, method1Attributes),
+                (_method2Info, method2Attributes)]);
+
+            //Assert
+            Assert.That(model.WrapOrder, Is.EquivalentTo(expectedWrapOrder));
+        }
+
+        public static IEnumerable<TestCaseData> ConstructorTestCases()
+        {
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Logging"),
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log after cache")
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(CacheResultAttribute), 0),
+                    (typeof(LogAttribute), 0),
+                    (typeof(LogAttribute), 1),
+                    (typeof(CacheResultAttribute), 1),
+                });
+        }
+    }
+
+    public class FakeClass
+    {
+        public void Method1()
+        {
+
+        }
+
+        public void Method2()
+        {
+
+        }
+    }
+}
