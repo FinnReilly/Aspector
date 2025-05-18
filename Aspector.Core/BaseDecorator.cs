@@ -14,26 +14,24 @@ namespace Aspector.Core
 
         private readonly ILoggerFactory _loggerFactory;
         private readonly Type _thisType;
-        private readonly int _index;
 
-        public BaseDecorator(ILoggerFactory loggerFactory, int index = 0)
+        public BaseDecorator(ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;
             _thisType = this.GetType();
-            _index = index;
         }
 
         public Type AttributeType { get; } = typeof(TAspect);
 
-
         public void Intercept(IInvocation invocation)
         {
             var aspectParameters = Enumerable.Empty<TAspect>();
-            if (CachedReflection.AttributeSummariesByMethod.TryGetValue(invocation.Method, out var summary)
-                && summary?.LayersByType.TryGetValue(typeof(TAspect), out var aspectLayers) == true
-                && aspectLayers?.TryGetValue(_index, out var thisLayer) == true)
+            if (invocation.MethodInvocationTarget != null && !_perMethodAspectParameters.TryGetValue(invocation.MethodInvocationTarget, out aspectParameters))
             {
-                aspectParameters = thisLayer.Cast<TAspect>();
+                var actualAttributes = invocation.MethodInvocationTarget.GetCustomAttributes<TAspect>();
+
+                _perMethodAspectParameters.TryAdd(invocation.Method, actualAttributes);
+                aspectParameters = actualAttributes;
             }
 
             if (!aspectParameters.Any())

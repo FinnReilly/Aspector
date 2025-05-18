@@ -46,8 +46,8 @@ namespace Aspector.Core.Models
                 });
         }
 
-        public Dictionary<Type, int> MaximumIndexByType { get; } = new Dictionary<Type, int>();
-        public List<AspectAttributeLayer> LayersFromInnermost { get; } = new List<AspectAttributeLayer>();
-        public Dictionary<Type, Dictionary<int, AspectAttributeLayer>> LayersByType { get; } = new Dictionary<Type, Dictionary<int, AspectAttributeLayer>>();
+        Dictionary<Type, int> MaximumIndexByType = new Dictionary<Type, int>();
+        List<AspectAttributeLayer> LayersFromInnermost { get; } = new List<AspectAttributeLayer>();
+        Dictionary<Type, Dictionary<int, AspectAttributeLayer>> LayersByType { get; } = new Dictionary<Type, Dictionary<int, AspectAttributeLayer>>();
     }
 }
