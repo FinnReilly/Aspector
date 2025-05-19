@@ -56,10 +56,28 @@ namespace Aspector.Core.Tests.Models
                 },
                 new List<(Type, int)>
                 {
-                    (typeof(CacheResultAttribute), 0),
                     (typeof(LogAttribute), 0),
+                    (typeof(CacheResultAttribute), 0),
                     (typeof(LogAttribute), 1),
-                    (typeof(CacheResultAttribute), 1),
+                });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log after cache")
+                },
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new AddLogPropertyAttribute("Constant Prop", "CONSTANT"),
+                    new LogAttribute("Log after cache and add log property")
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(LogAttribute), 0),
+                    (typeof(AddLogPropertyAttribute), 0),
+                    (typeof(CacheResultAttribute), 0)
                 });
         }
     }

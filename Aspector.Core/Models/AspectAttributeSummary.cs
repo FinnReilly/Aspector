@@ -24,12 +24,6 @@ namespace Aspector.Core.Models
                         // mark new layer
                         lastType = targetAttributeType;
                         var thisLayerIndex = 0;
-                        if (MaximumIndexByType.TryGetValue(targetAttributeType, out var previousLayerIndex))
-                        {
-                            thisLayerIndex = previousLayerIndex + 1;
-                        }
-
-                        MaximumIndexByType[targetAttributeType] = thisLayerIndex;
                         theseLayersFromInnermost.Add(new AspectAttributeLayer(thisLayerIndex, targetAttribute));
                     }
                     else
@@ -39,6 +33,41 @@ namespace Aspector.Core.Models
                 }
 
                 maxDepthByMethod[decoratedMethod] = theseLayersFromInnermost.Count;
+            }
+
+            var maxDepth = maxDepthByMethod.Max(kvp => kvp.Value);
+            var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.method]).ToList();
+            var typesNotAssignedAWrapLayer = new Dictionary<Type, int>();
+            
+            for (var i = 0; i <= maxDepth; i++)
+            {
+                var rowToAnalyse = analysisStructure.Where(list => list.Count > i).Select(list => list[i]);
+                var groupingsByType = rowToAnalyse.GroupBy(layer => layer.AspectType);
+                var typeCountsForThisRow = groupingsByType.GroupBy(g => g.Count()).OrderBy(g => g.Key);
+
+                foreach (var unassignedType in typesNotAssignedAWrapLayer)
+                {
+                    if (!groupingsByType.Any(g => g.Key == unassignedType.Key))
+                    {
+                        AddToWrapOrder(unassignedType.Key);
+                        typesNotAssignedAWrapLayer.Remove(unassignedType.Key);
+                    }
+                }
+
+                foreach (var typeCountForThisAnalysisRow in typeCountsForThisRow)
+                {
+                    foreach (var typeWithThisCount in typeCountForThisAnalysisRow)
+                    {
+                        var countForType = typeCountForThisAnalysisRow.Key;
+                        var aspectType = typeWithThisCount.Key;
+
+                        if (!typesNotAssignedAWrapLayer.TryGetValue(aspectType, out var countUnassigned))
+                        {
+                            countUnassigned = 0;
+                        }
+                        typesNotAssignedAWrapLayer[aspectType] = countUnassigned + countForType;
+                    }
+                }
             }
 
             //LayersByType = LayersFromInnermostByMethod.Aggregate(
@@ -56,6 +85,17 @@ namespace Aspector.Core.Models
 
             //        return layersByType;
             //    });
+        }
+
+        private void AddToWrapOrder(Type type)
+        {
+            if (!MaximumIndexByType.TryGetValue(type, out var currentMaxIndex))
+            {
+                currentMaxIndex = -1;
+            }
+            MaximumIndexByType[type] = currentMaxIndex + 1;
+
+            WrapOrder.Add((AspectType: type, LayerIndex: MaximumIndexByType[type]));
         }
 
         public Dictionary<Type, int> MaximumIndexByType = new Dictionary<Type, int>();
