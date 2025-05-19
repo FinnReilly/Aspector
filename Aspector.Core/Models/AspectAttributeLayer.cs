@@ -1,11 +1,10 @@
 ﻿using Aspector.Core.Attributes;
-using System.Collections.Generic;
 
 namespace Aspector.Core.Models
 {
     public class AspectAttributeLayer : List<AspectAttribute>
     {
-        public int LayerIndex { get; }
+        public int LayerIndex { get; set; }
         public Type AspectType { get; }
 
         public AspectAttributeLayer(int layerIndex, AspectAttribute firstMember)

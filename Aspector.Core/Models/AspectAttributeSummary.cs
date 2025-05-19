@@ -7,10 +7,10 @@ namespace Aspector.Core.Models
     {
         public AspectAttributeSummary((MethodInfo method, AspectAttribute[] aspects)[] inputs)
         {
-            Type? lastType = null;
             var maxDepthByMethod = new Dictionary<MethodInfo, int>();
             foreach (var input in inputs)
             {
+                Type? lastType = null;
                 var (decoratedMethod, aspectAttributes) = input;
                 var theseLayersFromInnermost = new List<AspectAttributeLayer>();
                 LayersFromInnermostByMethod[decoratedMethod] = theseLayersFromInnermost;
@@ -37,35 +37,108 @@ namespace Aspector.Core.Models
 
             var maxDepth = maxDepthByMethod.Max(kvp => kvp.Value);
             var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.method]).ToList();
-            var typesNotAssignedAWrapLayer = new Dictionary<Type, int>();
-            
-            for (var i = 0; i <= maxDepth; i++)
+
+            var higherLevelLayerStack = new Stack<(Type AspectType, List<(int RowIndex, int ColumnIndex)> Coordinates)>();
+
+            for (var rowIndex = 0; rowIndex < maxDepth; rowIndex++)
             {
-                var rowToAnalyse = analysisStructure.Where(list => list.Count > i).Select(list => list[i]);
-                var groupingsByType = rowToAnalyse.GroupBy(layer => layer.AspectType);
-                var typeCountsForThisRow = groupingsByType.GroupBy(g => g.Count()).OrderBy(g => g.Key);
-
-                foreach (var unassignedType in typesNotAssignedAWrapLayer)
+                for (var methodColumnIndex = 0; methodColumnIndex < inputs.Length; methodColumnIndex++)
                 {
-                    if (!groupingsByType.Any(g => g.Key == unassignedType.Key))
+                    var currentMethodColumn = analysisStructure[methodColumnIndex];
+                    var nextRowIndex = rowIndex + 1;
+                    var previousColumnIndex = methodColumnIndex - 1;
+                    var nextColumnIndex = methodColumnIndex + 1;
+                    var maxColumnIndex = inputs.Length - 1;
+
+                    if (rowIndex >= currentMethodColumn.Count)
                     {
-                        AddToWrapOrder(unassignedType.Key);
-                        typesNotAssignedAWrapLayer.Remove(unassignedType.Key);
+                        // empty coordinate logic? any?
+                        continue;
                     }
-                }
 
-                foreach (var typeCountForThisAnalysisRow in typeCountsForThisRow)
-                {
-                    foreach (var typeWithThisCount in typeCountForThisAnalysisRow)
+                    var currentAspect = currentMethodColumn[rowIndex];
+                    var currentAspectCanBeAddedThisIteration = true;
+
+                    // check left diagonal if applicable
+                    if (methodColumnIndex > 0 
+                        && analysisStructure[previousColumnIndex].Count > nextRowIndex
+                        && analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType)
                     {
-                        var countForType = typeCountForThisAnalysisRow.Key;
-                        var aspectType = typeWithThisCount.Key;
-
-                        if (!typesNotAssignedAWrapLayer.TryGetValue(aspectType, out var countUnassigned))
+                        var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
+                        var leftDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == previousColumnIndex) == true;
+                        var previousReservedLayerIsSameType = priorityReservedLayer.AspectType == currentAspect.AspectType;
+                        
+                        if (!previouslyReservedLayerExists || !leftDiagonalIsReserved)
                         {
-                            countUnassigned = 0;
+                            currentAspectCanBeAddedThisIteration = false;
+                            // add to stack
+                            higherLevelLayerStack.Push(
+                                (currentAspect.AspectType,
+                                new List<(int RowIndex, int ColumnIndex)>
+                                {
+                                    (rowIndex, methodColumnIndex)
+                                }));
                         }
-                        typesNotAssignedAWrapLayer[aspectType] = countUnassigned + countForType;
+                        else
+                        {
+                            if (priorityReservedLayer.AspectType == currentAspect.AspectType)
+                            {
+                                priorityReservedLayer.Coordinates?.Add((RowIndex: rowIndex, ColumnIndex: methodColumnIndex));
+                                if (methodColumnIndex < maxColumnIndex)
+                                {
+                                    currentAspectCanBeAddedThisIteration = false;
+                                }
+                            } 
+                        }
+                    }
+
+                    // check right diagonal if applicable
+                    if (methodColumnIndex < inputs.Length - 1
+                        && analysisStructure[nextColumnIndex].Count > nextRowIndex
+                        && analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType)
+                    {
+                        var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
+                        var rightDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == nextColumnIndex) == true;
+                        var previousReservedLayerIsSameType = priorityReservedLayer.AspectType == currentAspect.AspectType;
+
+                        if (!previouslyReservedLayerExists || !rightDiagonalIsReserved)
+                        {
+                            currentAspectCanBeAddedThisIteration = false;
+                            // add to stack
+                            higherLevelLayerStack.Push(
+                                (currentAspect.AspectType,
+                                new List<(int RowIndex, int ColumnIndex)>
+                                {
+                                    (rowIndex, methodColumnIndex)
+                                }));
+                        }
+                        else
+                        {
+                            if (priorityReservedLayer.AspectType == currentAspect.AspectType)
+                            {
+                                priorityReservedLayer.Coordinates?.Add((RowIndex: rowIndex, ColumnIndex: methodColumnIndex));
+                                if (methodColumnIndex < maxColumnIndex)
+                                {
+                                    currentAspectCanBeAddedThisIteration = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if (currentAspectCanBeAddedThisIteration)
+                    {
+                        // now add to wrap order
+                        var wrapLayerIndex = AddToWrapOrder(currentAspect.AspectType);
+
+                        var layersToUpdate = new List<AspectAttributeLayer> { analysisStructure[methodColumnIndex][rowIndex] };
+                        if (higherLevelLayerStack.TryPeek(out var nextHigherLayer)
+                            && nextHigherLayer.AspectType == currentAspect.AspectType
+                            && nextHigherLayer.Coordinates.Any(c => c.ColumnIndex == methodColumnIndex && c.RowIndex == rowIndex))
+                        {
+                            layersToUpdate = higherLevelLayerStack.Pop().Coordinates.Select(c => analysisStructure[c.ColumnIndex][c.RowIndex]).ToList();
+                        }
+
+                        layersToUpdate.ForEach(layer => layer.LayerIndex = wrapLayerIndex);
                     }
                 }
             }
@@ -87,7 +160,7 @@ namespace Aspector.Core.Models
             //    });
         }
 
-        private void AddToWrapOrder(Type type)
+        private int AddToWrapOrder(Type type)
         {
             if (!MaximumIndexByType.TryGetValue(type, out var currentMaxIndex))
             {
@@ -95,7 +168,10 @@ namespace Aspector.Core.Models
             }
             MaximumIndexByType[type] = currentMaxIndex + 1;
 
-            WrapOrder.Add((AspectType: type, LayerIndex: MaximumIndexByType[type]));
+            var newProxyLayerDescriptor = (AspectType: type, LayerIndex: MaximumIndexByType[type]);
+            WrapOrder.Add(newProxyLayerDescriptor);
+
+            return newProxyLayerDescriptor.LayerIndex;
         }
 
         public Dictionary<Type, int> MaximumIndexByType = new Dictionary<Type, int>();
