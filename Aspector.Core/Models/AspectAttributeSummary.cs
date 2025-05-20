@@ -60,51 +60,14 @@ namespace Aspector.Core.Models
                     var currentAspect = currentMethodColumn[rowIndex];
                     var currentAspectCanBeAddedThisIteration = true;
 
-                    // check left diagonal/left hand side if applicable
-                    if (methodColumnIndex > 0 
-                        && analysisStructure[previousColumnIndex].Count > nextRowIndex
-                        && (analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType 
-                            || analysisStructure[previousColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
+                    // define layer reservation and checking logic
+                    Action<int> checkAndUpdateColumnReservation = (columnToCheck) =>
                     {
                         var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
-                        var leftDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == previousColumnIndex) == true;
-                        var previousReservedLayerIsSameType = priorityReservedLayer.AspectType == currentAspect.AspectType;
-                        
-                        if (!previouslyReservedLayerExists || !leftDiagonalIsReserved)
-                        {
-                            currentAspectCanBeAddedThisIteration = false;
-                            // add to stack
-                            higherLevelLayerStack.Push(
-                                (currentAspect.AspectType,
-                                new List<(int RowIndex, int ColumnIndex)>
-                                {
-                                    (rowIndex, methodColumnIndex)
-                                }));
-                        }
-                        else
-                        {
-                            if (priorityReservedLayer.AspectType == currentAspect.AspectType)
-                            {
-                                priorityReservedLayer.Coordinates?.Add((RowIndex: rowIndex, ColumnIndex: methodColumnIndex));
-                                if (methodColumnIndex < maxColumnIndex)
-                                {
-                                    currentAspectCanBeAddedThisIteration = false;
-                                }
-                            } 
-                        }
-                    }
+                        var matchedDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == columnToCheck) == true;
+                        var previousReservedLayerIsCurrentType = priorityReservedLayer.AspectType == currentAspect.AspectType;
 
-                    // check right diagonal if applicable
-                    if (methodColumnIndex < analysisStructure.Count - 1
-                        && analysisStructure[nextColumnIndex].Count > nextRowIndex
-                        && (analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType
-                            || analysisStructure[nextColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
-                    {
-                        var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
-                        var rightDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == nextColumnIndex) == true;
-                        var previousReservedLayerIsSameType = priorityReservedLayer.AspectType == currentAspect.AspectType;
-
-                        if (!previouslyReservedLayerExists || !rightDiagonalIsReserved)
+                        if (!previouslyReservedLayerExists || !matchedDiagonalIsReserved)
                         {
                             currentAspectCanBeAddedThisIteration = false;
                             // add to stack
@@ -126,6 +89,24 @@ namespace Aspector.Core.Models
                                 }
                             }
                         }
+                    };
+
+                    // check left diagonal/left hand side if applicable
+                    if (methodColumnIndex > 0 
+                        && analysisStructure[previousColumnIndex].Count > nextRowIndex
+                        && (analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType 
+                            || analysisStructure[previousColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
+                    {
+                        checkAndUpdateColumnReservation(previousColumnIndex);
+                    }
+
+                    // check right diagonal if applicable
+                    if (methodColumnIndex < analysisStructure.Count - 1
+                        && analysisStructure[nextColumnIndex].Count > nextRowIndex
+                        && (analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType
+                            || analysisStructure[nextColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
+                    {
+                        checkAndUpdateColumnReservation(nextColumnIndex);
                     }
 
                     if (currentAspectCanBeAddedThisIteration)
@@ -133,6 +114,7 @@ namespace Aspector.Core.Models
                         // now add to wrap order
                         var wrapLayerIndex = AddToWrapOrder(currentAspect.AspectType);
 
+                        // final layer index in wrap order may differ to per-method analysis - update affected layers
                         var layersToUpdate = new List<AspectAttributeLayer> { analysisStructure[methodColumnIndex][rowIndex] };
                         if (higherLevelLayerStack.TryPeek(out var nextHigherLayer)
                             && nextHigherLayer.AspectType == currentAspect.AspectType
