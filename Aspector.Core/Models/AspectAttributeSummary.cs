@@ -36,19 +36,20 @@ namespace Aspector.Core.Models
             }
 
             var maxDepth = maxDepthByMethod.Max(kvp => kvp.Value);
-            var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.method]).ToList();
+            var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.method]).Where(col => col.Count > 0).ToList();
 
             var higherLevelLayerStack = new Stack<(Type AspectType, List<(int RowIndex, int ColumnIndex)> Coordinates)>();
 
             for (var rowIndex = 0; rowIndex < maxDepth; rowIndex++)
             {
-                for (var methodColumnIndex = 0; methodColumnIndex < inputs.Length; methodColumnIndex++)
+                for (var methodColumnIndex = 0; methodColumnIndex < analysisStructure.Count; methodColumnIndex++)
                 {
                     var currentMethodColumn = analysisStructure[methodColumnIndex];
                     var nextRowIndex = rowIndex + 1;
+                    var previousRowIndex = rowIndex - 1;
                     var previousColumnIndex = methodColumnIndex - 1;
                     var nextColumnIndex = methodColumnIndex + 1;
-                    var maxColumnIndex = inputs.Length - 1;
+                    var maxColumnIndex = analysisStructure.Count - 1;
 
                     if (rowIndex >= currentMethodColumn.Count)
                     {
@@ -59,10 +60,11 @@ namespace Aspector.Core.Models
                     var currentAspect = currentMethodColumn[rowIndex];
                     var currentAspectCanBeAddedThisIteration = true;
 
-                    // check left diagonal if applicable
+                    // check left diagonal/left hand side if applicable
                     if (methodColumnIndex > 0 
                         && analysisStructure[previousColumnIndex].Count > nextRowIndex
-                        && analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType)
+                        && (analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType 
+                            || analysisStructure[previousColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
                     {
                         var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
                         var leftDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == previousColumnIndex) == true;
@@ -93,9 +95,10 @@ namespace Aspector.Core.Models
                     }
 
                     // check right diagonal if applicable
-                    if (methodColumnIndex < inputs.Length - 1
+                    if (methodColumnIndex < analysisStructure.Count - 1
                         && analysisStructure[nextColumnIndex].Count > nextRowIndex
-                        && analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType)
+                        && (analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType
+                            || analysisStructure[nextColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
                     {
                         var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
                         var rightDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == nextColumnIndex) == true;

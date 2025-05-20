@@ -16,6 +16,7 @@ namespace Aspector.Core.Tests.Models
     {
         private MethodInfo _method1Info;
         private MethodInfo _method2Info;
+        private MethodInfo _method3Info;
 
         [SetUp]
         public void Setup()
@@ -23,6 +24,7 @@ namespace Aspector.Core.Tests.Models
             var fakeType = typeof(FakeClass);
             _method1Info = fakeType.GetMethod("Method1")!;
             _method2Info = fakeType.GetMethod("Method2")!;
+            _method3Info = fakeType.GetMethod("Method3")!;
         }
 
         [Test]
@@ -30,12 +32,14 @@ namespace Aspector.Core.Tests.Models
         public void Constructor_CorrectlyChoosesBestWrapOrder(
             AspectAttribute[] method1Attributes,
             AspectAttribute[] method2Attributes,
+            AspectAttribute[] method3Attributes,
             List<(Type, int)> expectedWrapOrder)
         {
             // Act
             var model = new AspectAttributeSummary([
                 (_method1Info, method1Attributes),
-                (_method2Info, method2Attributes)]);
+                (_method2Info, method2Attributes),
+                (_method3Info, method3Attributes)]);
 
             //Assert
             Assert.That(model.WrapOrder, Is.EquivalentTo(expectedWrapOrder));
@@ -54,6 +58,7 @@ namespace Aspector.Core.Tests.Models
                     new CacheResultAttribute(),
                     new LogAttribute("Log after cache")
                 },
+                new AspectAttribute[] {},
                 new List<(Type, int)>
                 {
                     (typeof(LogAttribute), 0),
@@ -73,6 +78,7 @@ namespace Aspector.Core.Tests.Models
                     new AddLogPropertyAttribute("Constant Prop", "CONSTANT"),
                     new LogAttribute("Log after cache and add log property")
                 },
+                new AspectAttribute[] { },
                 new List<(Type, int)>
                 {
                     (typeof(LogAttribute), 0),
@@ -90,6 +96,11 @@ namespace Aspector.Core.Tests.Models
         }
 
         public void Method2()
+        {
+
+        }
+
+        public void Method3()
         {
 
         }
