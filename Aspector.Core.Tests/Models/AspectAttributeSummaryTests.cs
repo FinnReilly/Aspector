@@ -2,12 +2,8 @@
 using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Attributes.Logging;
 using Aspector.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aspector.Core.Tests.Models
 {
@@ -84,6 +80,92 @@ namespace Aspector.Core.Tests.Models
                     (typeof(LogAttribute), 0),
                     (typeof(AddLogPropertyAttribute), 0),
                     (typeof(CacheResultAttribute), 0)
+                });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("log after cache")
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("log before cache"),
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("log before all"),
+                    new CacheResultAttribute(),
+                    new AddLogPropertyAttribute("ContextKey") { ConstantValue = 0 },
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(AddLogPropertyAttribute), 0),
+                    (typeof(CacheResultAttribute), 0),
+                    (typeof(LogAttribute), 0),
+                    (typeof(CacheResultAttribute), 1)
+                });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 0 },
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 1 },
+                    new CacheResultAttribute(),
+                    new LogAttribute("Some logging or other", LogLevel.Debug)
+                },
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 2 },
+                    new CacheResultAttribute(),
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(LogAttribute), 0),
+                    (typeof(CacheResultAttribute), 0),
+                    (typeof(AddLogPropertyAttribute), 0)
+                });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log something else"),
+                    new LogAttribute("Log another thing just to test aggregation"),
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log something"),
+                    new AddLogPropertyAttribute("Innermost"),
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new CacheResultAttribute(),
+                    new LogAttribute("More logging"),
+                    new CacheResultAttribute(),
+                    new LogAttribute("Should also be layer 0"),
+                    new LogAttribute("Should be layer 0")
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new CacheResultAttribute(),
+                    new LogAttribute("This is layer 1"),
+                    new CacheResultAttribute(),
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(AddLogPropertyAttribute), 0),
+                    (typeof(LogAttribute), 0),
+                    (typeof(CacheResultAttribute), 0),
+                    (typeof(LogAttribute), 1),
+                    (typeof(CacheResultAttribute), 1),
+                    (typeof(LogAttribute), 2)
                 });
         }
     }
