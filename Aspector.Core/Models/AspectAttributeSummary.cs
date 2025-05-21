@@ -128,21 +128,29 @@ namespace Aspector.Core.Models
                 }
             }
 
-            //LayersByType = LayersFromInnermostByMethod.Aggregate(
-            //    seed: new Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>>(),
-            //    func: (layersByType, singleLayer) => 
-            //    {
-            //        if (!layersByType.TryGetValue())
-            //        if (!layersByType.TryGetValue(singleLayer.AspectType, out var layersForType))
-            //        {
-            //            layersForType = new Dictionary<int, AspectAttributeLayer>();
-            //            layersByType[singleLayer.AspectType] = layersForType;
-            //        }
+            LayersByType = LayersFromInnermostByMethod.Aggregate(
+                seed: new Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>>(),
+                func: (layerDictionariesByMethod, singleMethod) =>
+                {
+                    if (!layerDictionariesByMethod.TryGetValue(singleMethod.Key, out var aspectTypeAsLayers))
+                    {
+                        aspectTypeAsLayers = singleMethod.Value.Aggregate(
+                            seed: new Dictionary<Type, Dictionary<int, AspectAttributeLayer>>(),
+                            func: (layersByAspectType, aspectLayer) =>
+                            {
+                                if (!layersByAspectType.TryGetValue(aspectLayer.AspectType, out var layersForThisType))
+                                {
+                                    layersForThisType = new Dictionary<int, AspectAttributeLayer>();
+                                    layersByAspectType[aspectLayer.AspectType] = layersForThisType;
+                                }
 
-            //        layersForType[singleLayer.LayerIndex] = AspectAttributeLayer.FromReversed(singleLayer);
+                                layersForThisType[aspectLayer.LayerIndex] = AspectAttributeLayer.FromReversed(aspectLayer);
+                                return layersByAspectType;
+                            });
+                    }
 
-            //        return layersByType;
-            //    });
+                    return layerDictionariesByMethod;
+                });
         }
 
         private int AddToWrapOrder(Type type)
