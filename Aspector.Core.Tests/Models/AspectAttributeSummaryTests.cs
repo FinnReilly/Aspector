@@ -37,9 +37,32 @@ namespace Aspector.Core.Tests.Models
                 (_method2Info, method2Attributes),
                 (_method3Info, method3Attributes)]);
 
-            //Assert
+            // Assert
             Assert.That(model.WrapOrderFromInnermost, Is.EquivalentTo(expectedWrapOrder));
 
+            foreach (var layer in model.LayersFromInnermostByMethod)
+            {
+                var wrapOrderIndicesFromLayers = layer.Value.Select(l => model.WrapOrderFromInnermost.FindIndex(wrapEntry => wrapEntry.AspectType == l.AspectType && wrapEntry.LayerIndex == l.LayerIndex));
+                var wrapOrders_ordered = wrapOrderIndicesFromLayers.Order();
+
+                Assert.That(wrapOrderIndicesFromLayers, Is.EquivalentTo(wrapOrders_ordered));
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ConstructorTestCases_Permissive))]
+        public void Constructor_ChoosesWrapOrderWhichAlignsWithOrderingOfAttributeLayers(
+            AspectAttribute[] method1Attributes,
+            AspectAttribute[] method2Attributes,
+            AspectAttribute[] method3Attributes)
+        {
+            // Act
+            var model = new AspectAttributeSummary([
+                (_method1Info, method1Attributes),
+                (_method2Info, method2Attributes),
+                (_method3Info, method3Attributes)]);
+
+            // Assert
             foreach (var layer in model.LayersFromInnermostByMethod)
             {
                 var wrapOrderIndicesFromLayers = layer.Value.Select(l => model.WrapOrderFromInnermost.FindIndex(wrapEntry => wrapEntry.AspectType == l.AspectType && wrapEntry.LayerIndex == l.LayerIndex));
@@ -139,6 +162,109 @@ namespace Aspector.Core.Tests.Models
                     (typeof(AddLogPropertyAttribute), 0)
                 });
 
+            //yield return new TestCaseData(
+            //    new AspectAttribute[]
+            //    {
+            //        new LogAttribute("Outermost"),
+            //        new CacheResultAttribute(),
+            //        new LogAttribute("Log something else"),
+            //        new LogAttribute("Log another thing just to test aggregation"),
+            //        new CacheResultAttribute(),
+            //        new LogAttribute("Log something"),
+            //        new AddLogPropertyAttribute("Innermost"),
+            //    },
+            //    new AspectAttribute[]
+            //    {
+            //        new LogAttribute("Outermost"),
+            //        new CacheResultAttribute(),
+            //        new LogAttribute("More logging"),
+            //        new CacheResultAttribute(),
+            //        new LogAttribute("Should also be layer 0"),
+            //        new LogAttribute("Should be layer 0")
+            //    },
+            //    new AspectAttribute[]
+            //    {
+            //        new LogAttribute("Outermost"),
+            //        new CacheResultAttribute(),
+            //        new LogAttribute("This is layer 1"),
+            //        new CacheResultAttribute(),
+            //    },
+            //    new List<(Type, int)>
+            //    {
+            //        (typeof(AddLogPropertyAttribute), 0),
+            //        (typeof(LogAttribute), 0),
+            //        (typeof(CacheResultAttribute), 0),
+            //        (typeof(LogAttribute), 1),
+            //        (typeof(CacheResultAttribute), 1),
+            //        (typeof(LogAttribute), 2)
+            //    });
+        }
+
+        public static IEnumerable<TestCaseData> ConstructorTestCases_Permissive()
+        {
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Logging"),
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log after cache")
+                },
+                new AspectAttribute[] { });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("Log after cache")
+                },
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new AddLogPropertyAttribute("Constant Prop", "CONSTANT"),
+                    new LogAttribute("Log after cache and add log property")
+                },
+                new AspectAttribute[] { });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new CacheResultAttribute(),
+                    new LogAttribute("log after cache")
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("log before cache"),
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("log before all"),
+                    new CacheResultAttribute(),
+                    new AddLogPropertyAttribute("ContextKey") { ConstantValue = 0 }
+                });
+
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 0 },
+                    new CacheResultAttribute()
+                },
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 1 },
+                    new CacheResultAttribute(),
+                    new LogAttribute("Some logging or other", LogLevel.Debug)
+                },
+                new AspectAttribute[]
+                {
+                    new AddLogPropertyAttribute("Method") { ConstantValue = 2 },
+                    new CacheResultAttribute(),
+                });
+
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
@@ -165,15 +291,6 @@ namespace Aspector.Core.Tests.Models
                     new CacheResultAttribute(),
                     new LogAttribute("This is layer 1"),
                     new CacheResultAttribute(),
-                },
-                new List<(Type, int)>
-                {
-                    (typeof(AddLogPropertyAttribute), 0),
-                    (typeof(LogAttribute), 0),
-                    (typeof(CacheResultAttribute), 0),
-                    (typeof(LogAttribute), 1),
-                    (typeof(CacheResultAttribute), 1),
-                    (typeof(LogAttribute), 2)
                 });
         }
     }
