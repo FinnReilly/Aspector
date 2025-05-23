@@ -50,8 +50,8 @@ namespace Aspector.Core.Extensions
                                 CachedReflection.AttributeSummariesByClass[t.ImplementationType] = new AspectAttributeSummary(
                                     decoratedMethods.Select(
                                         method => (
-                                            method,
-                                            method.GetCustomAttributes()
+                                            Method: method,
+                                            Aspects: method.GetCustomAttributes()
                                                 .Where(a => usedAttributes.Contains(a.GetType()))
                                                 .Cast<AspectAttribute>()
                                                 .ToArray()))
@@ -135,9 +135,20 @@ namespace Aspector.Core.Extensions
             {
                 var layersToAdd = maxLayerIndex[reverseImplementationDictionary[type]] + 1;
 
+                var lifeTimeToCreate = type.GetCustomAttribute<AspectLifetimeAttribute>()?.Lifetime ?? ServiceLifetime.Singleton;
+                
+                Action<Type, int, Func<IServiceProvider, object?, object>> registrationFunction = lifeTimeToCreate switch
+                {
+                    ServiceLifetime.Scoped => (type, i, func) => services.AddKeyedScoped(type, i, func),
+                    ServiceLifetime.Transient => (type, i, func) => services.AddKeyedTransient(type, i, func),
+                    ServiceLifetime.Singleton => (type, i, func) => services.AddKeyedSingleton(type, i, func),
+                    _ => (type, i, func) => services.AddKeyedSingleton(type, i, func),
+                };
+
                 for (var  i = 0; i < layersToAdd; i++)
                 {
-                    services.AddKeyedSingleton(type, i, implementationFactory: (provider, key) => ActivatorUtilities.CreateInstance(provider, type, (int)key!));
+                    // inject service key into base decorator as layer index
+                    registrationFunction(type, i, (provider, key) => ActivatorUtilities.CreateInstance(provider, type, (int)key!));
                 }
             }
 

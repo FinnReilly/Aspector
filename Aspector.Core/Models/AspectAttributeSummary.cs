@@ -5,7 +5,7 @@ namespace Aspector.Core.Models
 {
     public class AspectAttributeSummary
     {
-        public AspectAttributeSummary((MethodInfo method, AspectAttribute[] aspects)[] inputs)
+        public AspectAttributeSummary((MethodInfo Method, AspectAttribute[] Aspects)[] inputs)
         {
             var maxDepthByMethod = new Dictionary<MethodInfo, int>();
             foreach (var input in inputs)
@@ -36,7 +36,7 @@ namespace Aspector.Core.Models
             }
 
             var maxDepth = maxDepthByMethod.Max(kvp => kvp.Value);
-            var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.method]).Where(col => col.Count > 0).ToList();
+            var analysisStructure = inputs.Select(i => LayersFromInnermostByMethod[i.Method]).Where(col => col.Count > 0).ToList();
 
             var higherLevelLayerStack = new Stack<(Type AspectType, List<(int RowIndex, int ColumnIndex)> Coordinates)>();
 
