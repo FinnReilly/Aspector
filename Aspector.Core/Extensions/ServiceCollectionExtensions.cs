@@ -1,4 +1,6 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Models;
+using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,19 +22,35 @@ namespace Aspector.Core.Extensions
             var allTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes());
 
             var usedAttributes = new HashSet<Type>();
-            var decoratedTypes = allTypes
+            var applicableServicesInContainer = services
                 .Where(
                     t =>
                         {
-                            var decorators = t.GetMembers(BindingFlags.Public | BindingFlags.Instance)
-                                .SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
-                            
-                            if (decorators.Any())
+                            if (t.ImplementationType is null || !t.ServiceType.IsInterface)
                             {
-                                foreach(var decorator in decorators)
+                                return false;
+                            }
+
+                            var decoratedMethods = t.ImplementationType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                                .Where(m => m.CustomAttributes.Any(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute<>))));
+                            var decoratorTypes = decoratedMethods.SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
+                            
+                            if (decoratorTypes.Any())
+                            {
+                                foreach(var decorator in decoratorTypes)
                                 {
                                     usedAttributes.Add(decorator.AttributeType);
                                 }
+
+                                CachedReflection.AttributeSummariesByClass[t.ImplementationType] = new AspectAttributeSummary(
+                                    decoratedMethods.Select(
+                                        method => (
+                                            method,
+                                            method.GetCustomAttributes()
+                                                .Where(a => usedAttributes.Contains(a.GetType()))
+                                                .Cast<AspectAttribute>()
+                                                .ToArray()))
+                                    .ToArray());
 
                                 return true;
                             }
@@ -87,16 +105,34 @@ namespace Aspector.Core.Extensions
                 }
             }
 
+            // calculate domain-level max depth
+            var maxDepth = CachedReflection.AttributeSummariesByClass.Aggregate(
+                new Dictionary<Type, int>(),
+                (maxCounters, summary) =>
+                {
+                    foreach (var counter in summary.Value.MaximumIndexByType)
+                    {
+                        if (!maxCounters.TryGetValue(counter.Key, out int counterValue))
+                        {
+                            counterValue = 0;
+                        }
+
+                        maxCounters[counter.Key] = Math.Max(counterValue, counter.Value);
+                    }
+
+                    return maxCounters;
+                });
+
             // add required implementations, as singleton for now
             foreach (var type in requiredImplementationTypes)
             {
-                services.AddSingleton(type);
-            }
+                var layersToAdd = maxDepth[type];
 
-            var applicableServicesInContainer = services.Where(
-                descriptor => descriptor.ServiceType.IsInterface
-                    && decoratedTypes.Contains(descriptor.ImplementationType!))
-                .ToList();
+                for (var  i = 0; i < layersToAdd; i++)
+                {
+                    services.AddKeyedSingleton(type, i);
+                }
+            }
 
             foreach(var serviceDescriptor in applicableServicesInContainer)
             {

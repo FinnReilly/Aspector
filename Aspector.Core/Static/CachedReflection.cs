@@ -7,6 +7,6 @@ namespace Aspector.Core.Static
     public static class CachedReflection
     {
         public static ConcurrentDictionary<MethodInfo, ParameterInfo[]> ParametersByMethod = new ConcurrentDictionary<MethodInfo, ParameterInfo[]>();
-        public static Dictionary<MethodInfo, AspectAttributeSummary> AttributeSummariesByMethod = new Dictionary<MethodInfo, AspectAttributeSummary>();
+        public static Dictionary<Type, AspectAttributeSummary> AttributeSummariesByClass = new Dictionary<Type, AspectAttributeSummary>();
     }
 }

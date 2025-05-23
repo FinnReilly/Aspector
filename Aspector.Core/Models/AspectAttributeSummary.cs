@@ -61,7 +61,7 @@ namespace Aspector.Core.Models
                     var currentAspectCanBeAddedThisIteration = true;
 
                     // define layer reservation and checking logic
-                    Action<int> checkAndUpdateColumnReservation = (columnToCheck) =>
+                    Action<int, int> checkAndUpdateColumnReservation = (columnToCheck, rowToCheck) =>
                     {
                         var previouslyReservedLayerExists = higherLevelLayerStack.TryPeek(out var priorityReservedLayer);
                         var matchedDiagonalIsReserved = priorityReservedLayer.Coordinates?.Any(c => c.ColumnIndex == columnToCheck) == true;
@@ -71,12 +71,17 @@ namespace Aspector.Core.Models
                         {
                             currentAspectCanBeAddedThisIteration = false;
                             // add to stack
-                            higherLevelLayerStack.Push(
-                                (currentAspect.AspectType,
-                                new List<(int RowIndex, int ColumnIndex)>
-                                {
-                                    (rowIndex, methodColumnIndex)
-                                }));
+                            var coordinatesToAdd = new List<(int RowIndex, int ColumnIndex)>
+                            {
+                                (rowIndex, methodColumnIndex)
+                            };
+
+                            //if (rowToCheck > rowIndex)
+                            //{
+                            //    coordinatesToAdd.Add((rowToCheck, columnToCheck));
+                            //}
+
+                            higherLevelLayerStack.Push((currentAspect.AspectType, coordinatesToAdd));
                         }
                         else
                         {
@@ -97,7 +102,9 @@ namespace Aspector.Core.Models
                         && (analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType 
                             || analysisStructure[previousColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
                     {
-                        checkAndUpdateColumnReservation(previousColumnIndex);
+                        var rowToCheck = analysisStructure[previousColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType ?
+                            nextRowIndex : rowIndex;
+                        checkAndUpdateColumnReservation(previousColumnIndex, rowToCheck);
                     }
 
                     // check right diagonal if applicable
@@ -106,7 +113,9 @@ namespace Aspector.Core.Models
                         && (analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType
                             || analysisStructure[nextColumnIndex][rowIndex].AspectType == currentAspect.AspectType))
                     {
-                        checkAndUpdateColumnReservation(nextColumnIndex);
+                        var rowToCheck = analysisStructure[nextColumnIndex][nextRowIndex].AspectType == currentAspect.AspectType ?
+                            nextRowIndex : rowIndex;
+                        checkAndUpdateColumnReservation(nextColumnIndex, rowToCheck);
                     }
 
                     if (currentAspectCanBeAddedThisIteration)
