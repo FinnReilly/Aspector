@@ -9,8 +9,8 @@ namespace Aspector.Core.Caching
     {
         private readonly IMemoryCache _memoryCache;
 
-        public CacheResultAspect(IMemoryCache memoryCache, ILoggerFactory loggerFactory)
-            : base(loggerFactory)
+        public CacheResultAspect(IMemoryCache memoryCache, ILoggerFactory loggerFactory, int layerIndex)
+            : base(loggerFactory, layerIndex)
         {
             _memoryCache = memoryCache;
         }

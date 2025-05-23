@@ -8,8 +8,8 @@ namespace Aspector.Core
     public abstract class VoidDecorator<TAspect> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
     {
-        protected VoidDecorator(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        protected VoidDecorator(ILoggerFactory loggerFactory, int layerIndex) 
+            : base(loggerFactory, layerIndex)
         {
         }
 

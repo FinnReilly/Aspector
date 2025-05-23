@@ -11,8 +11,8 @@ namespace Aspector.Core.Logging
 {
     public class AddLogPropertyAspect : VoidDecorator<AddLogPropertyAttribute>
     {
-        public AddLogPropertyAspect(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        public AddLogPropertyAspect(ILoggerFactory loggerFactory, int layerIndex) 
+            : base(loggerFactory, layerIndex)
         {
         }
 

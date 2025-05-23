@@ -11,7 +11,7 @@ namespace Aspector.Core.Logging
 {
     public class AddLogPropertyAsyncAspect : AsyncDecorator<AddLogPropertyAsyncAttribute>
     {
-        public AddLogPropertyAsyncAspect(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public AddLogPropertyAsyncAspect(ILoggerFactory loggerFactory, int layerIndex) : base(loggerFactory, layerIndex)
         {
         }
 

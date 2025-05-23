@@ -38,11 +38,11 @@ namespace Aspector.Core.Tests.Models
                 (_method3Info, method3Attributes)]);
 
             //Assert
-            Assert.That(model.WrapOrder, Is.EquivalentTo(expectedWrapOrder));
+            Assert.That(model.WrapOrderFromInnermost, Is.EquivalentTo(expectedWrapOrder));
 
             foreach (var layer in model.LayersFromInnermostByMethod)
             {
-                var wrapOrderIndicesFromLayers = layer.Value.Select(l => model.WrapOrder.FindIndex(wrapEntry => wrapEntry.AspectType == l.AspectType && wrapEntry.LayerIndex == l.LayerIndex));
+                var wrapOrderIndicesFromLayers = layer.Value.Select(l => model.WrapOrderFromInnermost.FindIndex(wrapEntry => wrapEntry.AspectType == l.AspectType && wrapEntry.LayerIndex == l.LayerIndex));
                 var wrapOrders_ordered = wrapOrderIndicesFromLayers.Order();
 
                 Assert.That(wrapOrderIndicesFromLayers, Is.EquivalentTo(wrapOrders_ordered));

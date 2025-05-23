@@ -8,8 +8,8 @@ namespace Aspector.Core
     public abstract class ResultDecorator<TAspect, TResult> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
     {
-        protected ResultDecorator(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        protected ResultDecorator(ILoggerFactory loggerFactory, int layerIndex) 
+            : base(loggerFactory, layerIndex)
         {
         }
 

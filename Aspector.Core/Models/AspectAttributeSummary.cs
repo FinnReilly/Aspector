@@ -156,6 +156,8 @@ namespace Aspector.Core.Models
                                 layersForThisType[aspectLayer.LayerIndex] = AspectAttributeLayer.FromReversed(aspectLayer);
                                 return layersByAspectType;
                             });
+
+                        layerDictionariesByMethod[singleMethod.Key] = aspectTypeAsLayers;
                     }
 
                     return layerDictionariesByMethod;
@@ -171,13 +173,13 @@ namespace Aspector.Core.Models
             MaximumIndexByType[type] = currentMaxIndex + 1;
 
             var newProxyLayerDescriptor = (AspectType: type, LayerIndex: MaximumIndexByType[type]);
-            WrapOrder.Add(newProxyLayerDescriptor);
+            WrapOrderFromInnermost.Add(newProxyLayerDescriptor);
 
             return newProxyLayerDescriptor.LayerIndex;
         }
 
         public Dictionary<Type, int> MaximumIndexByType = new Dictionary<Type, int>();
-        public List<(Type AspectType, int LayerIndex)> WrapOrder = new List<(Type AspectType, int LayerIndex)>();
+        public List<(Type AspectType, int LayerIndex)> WrapOrderFromInnermost = new List<(Type AspectType, int LayerIndex)>();
         public Dictionary<MethodInfo, List<AspectAttributeLayer>> LayersFromInnermostByMethod { get; } = new Dictionary<MethodInfo, List<AspectAttributeLayer>>();
         public Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>> LayersByType { get; } = new Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>>();
     }

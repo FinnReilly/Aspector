@@ -14,11 +14,13 @@ namespace Aspector.Core
 
         private readonly ILoggerFactory _loggerFactory;
         private readonly Type _thisType;
+        private readonly int LayerIndex;
 
-        public BaseDecorator(ILoggerFactory loggerFactory)
+        public BaseDecorator(ILoggerFactory loggerFactory, int layerIndex)
         {
             _loggerFactory = loggerFactory;
             _thisType = this.GetType();
+            LayerIndex = layerIndex;
         }
 
         public Type AttributeType { get; } = typeof(TAspect);
@@ -26,15 +28,20 @@ namespace Aspector.Core
         public void Intercept(IInvocation invocation)
         {
             var aspectParameters = Enumerable.Empty<TAspect>();
-            if (invocation.MethodInvocationTarget != null && !_perMethodAspectParameters.TryGetValue(invocation.MethodInvocationTarget, out aspectParameters))
-            {
-                var actualAttributes = invocation.MethodInvocationTarget.GetCustomAttributes<TAspect>();
 
-                _perMethodAspectParameters.TryAdd(invocation.Method, actualAttributes);
+            if (invocation.MethodInvocationTarget != null
+                && !_perMethodAspectParameters.TryGetValue(invocation.MethodInvocationTarget, out aspectParameters)
+                && CachedReflection.AttributeSummariesByClass.TryGetValue(invocation.TargetType!, out var summary)
+                && summary.LayersByType.TryGetValue(invocation.MethodInvocationTarget!, out var aspectLayerMap)
+                && aspectLayerMap.TryGetValue(AttributeType, out var attributeLayers)
+                && attributeLayers.TryGetValue(LayerIndex, out var thisAttributeLayer))
+            {
+                var actualAttributes = thisAttributeLayer.Cast<TAspect>() ?? Enumerable.Empty<TAspect>();
+                _perMethodAspectParameters.TryAdd(invocation.MethodInvocationTarget, actualAttributes);
                 aspectParameters = actualAttributes;
             }
 
-            if (!aspectParameters.Any())
+            if (aspectParameters?.Any() != true)
             {
                 invocation.Proceed();
                 return;

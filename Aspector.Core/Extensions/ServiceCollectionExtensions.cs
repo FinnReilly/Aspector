@@ -4,7 +4,6 @@ using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
 
 namespace Aspector.Core.Extensions
@@ -32,8 +31,14 @@ namespace Aspector.Core.Extensions
                             }
 
                             var decoratedMethods = t.ImplementationType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                                .Where(m => m.CustomAttributes.Any(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute<>))));
-                            var decoratorTypes = decoratedMethods.SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
+                                .Where(m => m.CustomAttributes.Any(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
+
+                            if (decoratedMethods?.Any() != true)
+                            {
+                                return false;
+                            }
+
+                            var decoratorTypes = decoratedMethods!.SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
                             
                             if (decoratorTypes.Any())
                             {
@@ -60,6 +65,7 @@ namespace Aspector.Core.Extensions
                 .ToHashSet();
 
             var implementationDictionary = new Dictionary<Type, Type>();
+            var reverseImplementationDictionary = new Dictionary<Type, Type>();
             var baseAspectType = typeof(BaseDecorator<>);
             var assignableTypes = usedAttributes.Select(t => baseAspectType.MakeGenericType([t]));
             var requiredImplementationTypes = allTypes.Where(
@@ -90,6 +96,7 @@ namespace Aspector.Core.Extensions
                             }
 
                             implementationDictionary.Add(aspectArgumentType, t);
+                            reverseImplementationDictionary.Add(t, aspectArgumentType);
                             return true;
                         }
 
@@ -106,7 +113,7 @@ namespace Aspector.Core.Extensions
             }
 
             // calculate domain-level max depth
-            var maxDepth = CachedReflection.AttributeSummariesByClass.Aggregate(
+            var maxLayerIndex = CachedReflection.AttributeSummariesByClass.Aggregate(
                 new Dictionary<Type, int>(),
                 (maxCounters, summary) =>
                 {
@@ -124,32 +131,35 @@ namespace Aspector.Core.Extensions
                 });
 
             // add required implementations, as singleton for now
-            foreach (var type in requiredImplementationTypes)
+            foreach(var type in requiredImplementationTypes)
             {
-                var layersToAdd = maxDepth[type];
+                var layersToAdd = maxLayerIndex[reverseImplementationDictionary[type]] + 1;
 
                 for (var  i = 0; i < layersToAdd; i++)
                 {
-                    services.AddKeyedSingleton(type, i);
+                    services.AddKeyedSingleton(type, i, implementationFactory: (provider, key) => ActivatorUtilities.CreateInstance(provider, type, (int)key!));
                 }
             }
 
             foreach(var serviceDescriptor in applicableServicesInContainer)
             {
-                var applicableAspects = serviceDescriptor
-                    .ImplementationType!
-                    .GetMembers(BindingFlags.Public | BindingFlags.Instance)
-                    .SelectMany(m => m.CustomAttributes.Where(a => a.AttributeType.IsAssignableTo(typeof(AspectAttribute))))
-                    .Select(a => a.AttributeType)
-                    .Distinct();
+                var matchingAspectAttributeSummary = CachedReflection.AttributeSummariesByClass[serviceDescriptor.ImplementationType!];
 
                 var replacement = ServiceDescriptor.Describe(
                     serviceDescriptor.ServiceType,
                     implementationFactory: (provider) =>
                     {
                         var generator = provider.GetRequiredService<ProxyGenerator>();
-                        var target = ActivatorUtilities.CreateInstance(provider, serviceDescriptor.ImplementationType);
-                        var aspectImplementations = applicableAspects.Select(aspect => (IInterceptor)provider.GetRequiredService(implementationDictionary[aspect])).ToArray();
+                        var target = ActivatorUtilities.CreateInstance(provider, serviceDescriptor.ImplementationType!);
+                        var aspectImplementations = matchingAspectAttributeSummary.WrapOrderFromInnermost
+                            .Select(
+                                aspectOrderDescriptor => 
+                                    (IInterceptor)provider
+                                        .GetRequiredKeyedService(
+                                            implementationDictionary[aspectOrderDescriptor.AspectType],
+                                            aspectOrderDescriptor.LayerIndex))
+                            .Reverse()
+                            .ToArray();
 
                         return generator.CreateInterfaceProxyWithTarget(serviceDescriptor.ServiceType, target: target, interceptors: aspectImplementations);
                     },

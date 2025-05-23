@@ -6,8 +6,8 @@ namespace Aspector.Core
     public abstract class AsyncResultDecorator<TAspect, TFinalResult> : ResultDecorator<TAspect, Task<TFinalResult>>
         where TAspect : AspectAttribute
     {
-        protected AsyncResultDecorator(ILoggerFactory loggerFactory) 
-            : base(loggerFactory)
+        protected AsyncResultDecorator(ILoggerFactory loggerFactory, int layerIndex) 
+            : base(loggerFactory, layerIndex)
         {
         }
     }

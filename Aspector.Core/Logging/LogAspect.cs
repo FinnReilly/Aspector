@@ -6,7 +6,7 @@ namespace Aspector.Core.Logging
 {
     public class LogAspect : VoidDecorator<LogAttribute>
     {
-        public LogAspect(ILoggerFactory loggerFactory) : base(loggerFactory)
+        public LogAspect(ILoggerFactory loggerFactory, int layerIndex) : base(loggerFactory, layerIndex)
         {
         }
 
