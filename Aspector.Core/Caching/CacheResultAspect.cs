@@ -1,11 +1,11 @@
 ﻿using Aspector.Core.Attributes.Caching;
-using Castle.DynamicProxy;
+using Aspector.Core.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Aspector.Core.Caching
 {
-    public class CacheResultAspect : BaseDecorator<CacheResultAttribute>
+    public class CacheResultAspect : ResultDecorator<CacheResultAttribute, object>
     {
         private readonly IMemoryCache _memoryCache;
 
@@ -15,22 +15,20 @@ namespace Aspector.Core.Caching
             _memoryCache = memoryCache;
         }
 
-        protected override void Decorate(IInvocation invocation, IEnumerable<CacheResultAttribute> aspectParameters)
+        protected override object Decorate(Func<object[]?, object> targetMethod, object[]? parameters, DecorationContext context, IEnumerable<CacheResultAttribute> aspectParameters)
         {
             var aspectParameter = aspectParameters.First();
-            var cacheKey = aspectParameter.CacheKey ?? $"{invocation.TargetType?.FullName}.{invocation.Method.Name}";
+            var cacheKey = aspectParameter.CacheKey ?? $"{context.DecoratedType?.FullName}.{context.DecoratedMethod.Name}";
 
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
                 && cachedValue != null)
             {
-                invocation.ReturnValue = cachedValue;
-                return;
+                return cachedValue;
             }
 
-            invocation.Proceed();
-
+            var result = targetMethod(parameters);
             using var entry = _memoryCache.CreateEntry(cacheKey);
-            entry.Value = invocation.ReturnValue;
+            entry.Value = result;
 
             if (aspectParameter.TimeToCacheMilliseconds.HasValue)
             {
@@ -41,6 +39,8 @@ namespace Aspector.Core.Caching
                     entry.SlidingExpiration = timeSpan;
                 }
             }
+
+            return result;
         }
     }
 }
