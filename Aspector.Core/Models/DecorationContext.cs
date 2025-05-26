@@ -22,7 +22,7 @@ namespace Aspector.Core.Models
         {
             if (ParameterMetadata.Count == 0)
             {
-                throw new KeyNotFoundException($"Parameter {name} could not be found.  No parameters present");
+                throw new KeyNotFoundException($"Parameter {name} could not be found.  No parameters required for {DecoratedMethod.Name}");
             }
 
             var parameterIndex = -1;
@@ -31,14 +31,14 @@ namespace Aspector.Core.Models
                 var paramInfo = ParameterMetadata.ElementAt(i);
                 if (paramInfo.Name == name)
                 {
-                    parameterIndex = 1;
+                    parameterIndex = i;
                     break;
                 }
             }
 
             if (parameterIndex < 0)
             {
-                throw new KeyNotFoundException($"Parameter {name} could not be found in method parameters");
+                throw new KeyNotFoundException($"Parameter {name} could not be found in method parameters for {DecoratedMethod.Name}");
             }
 
             return parameters[parameterIndex];
