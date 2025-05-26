@@ -1,4 +1,4 @@
-﻿using Aspector.Core.Models;
+﻿using Aspector.Core.Models.Registration;
 using System.Collections.Concurrent;
 using System.Reflection;
 

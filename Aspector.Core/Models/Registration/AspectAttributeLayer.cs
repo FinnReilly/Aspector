@@ -1,6 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 
-namespace Aspector.Core.Models
+namespace Aspector.Core.Models.Registration
 {
     public class AspectAttributeLayer : List<AspectAttribute>
     {

@@ -2,10 +2,11 @@
 using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Attributes.Logging;
 using Aspector.Core.Models;
+using Aspector.Core.Models.Registration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace Aspector.Core.Tests.Models
+namespace Aspector.Core.Tests.Models.Registration
 {
     [TestFixture]
     public class AspectAttributeSummaryTests

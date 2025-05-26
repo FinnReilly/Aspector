@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Models;
+using Aspector.Core.Models.Registration;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;

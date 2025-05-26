@@ -1,7 +1,7 @@
 ﻿using Aspector.Core.Attributes;
 using System.Reflection;
 
-namespace Aspector.Core.Models
+namespace Aspector.Core.Models.Registration
 {
     public class AspectAttributeSummary
     {
