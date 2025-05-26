@@ -17,7 +17,7 @@ namespace Aspector.Core.Logging
             DecorationContext context,
             IEnumerable<AddLogPropertyAttribute> aspectParameters)
         {
-            var logger = GetLogger(context.DecoratedType);
+            var logger = GetLogger(context);
             var logscopeDictionary = new Dictionary<string, object?>();
 
             foreach(var aspectParameter in aspectParameters)

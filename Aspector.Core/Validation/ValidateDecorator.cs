@@ -17,7 +17,7 @@ namespace Aspector.Core.Validation
             DecorationContext context,
             IEnumerable<TAspect> aspectParameters)
         {
-            var logger = GetLogger(context.DecoratedType);
+            var logger = GetLogger(context);
             foreach (var aspectParameter in aspectParameters)
             {
                 var retrievedParameters = GetParametersToValidate(aspectParameter, context, parameters);

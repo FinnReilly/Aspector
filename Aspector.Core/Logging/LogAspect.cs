@@ -16,7 +16,7 @@ namespace Aspector.Core.Logging
             DecorationContext context,
             IEnumerable<LogAttribute> aspectParameters)
         {
-            var logger = GetLogger(context.DecoratedType);
+            var logger = GetLogger(context);
             parameters ??= Array.Empty<object>();
             foreach (var param in aspectParameters)
             {

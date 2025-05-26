@@ -27,7 +27,7 @@ namespace Aspector.Core.AccessControl
             IEnumerable<AuthoriseObjectAccessAttribute<TResult>> aspectParameters)
         {
             var claims = _httpContextAccessor.HttpContext?.User;
-            var logger = GetLogger(context.DecoratedType);
+            var logger = GetLogger(context);
 
             var result = targetMethod(parameters);
             if (claims == null)

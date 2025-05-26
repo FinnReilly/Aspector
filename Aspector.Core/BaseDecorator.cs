@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Models;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
@@ -54,6 +55,6 @@ namespace Aspector.Core
 
         private string LoggerName(Type targetType) => $"{targetType.FullName}:{_thisType.FullName}";
         
-        protected ILogger GetLogger(Type targetType) => _loggerFactory.CreateLogger(LoggerName(targetType));
+        protected ILogger GetLogger(DecorationContext context) => _loggerFactory.CreateLogger(LoggerName(context.DecoratedType));
     }
 }
