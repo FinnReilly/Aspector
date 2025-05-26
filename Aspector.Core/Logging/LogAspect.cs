@@ -1,6 +1,6 @@
 ﻿using Aspector.Core.Attributes.Logging;
+using Aspector.Core.Models;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace Aspector.Core.Logging
 {
@@ -13,7 +13,7 @@ namespace Aspector.Core.Logging
         protected override void Decorate(
             Action<object[]?> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) context,
+            DecorationContext context,
             IEnumerable<LogAttribute> aspectParameters)
         {
             var logger = GetLogger(context.DecoratedType);
@@ -23,7 +23,7 @@ namespace Aspector.Core.Logging
                 logger.Log(
                     param.Level,
                     param.LogString,
-                    param.ParametersForLogging.Select(name => GetParameterByName(name, context.ParameterMetadata, parameters)));
+                    param.ParametersForLogging.Select(name => context.GetParameterByName(name, parameters)));
             }
 
             targetMethod(parameters);

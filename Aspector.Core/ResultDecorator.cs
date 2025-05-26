@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Models;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -33,7 +34,7 @@ namespace Aspector.Core
             var decoratorResult = Decorate(
                 targetMethodAsAction,
                 invocation.Arguments!,
-                (GetMethodParameterMetadata(invocation), invocation.Method, invocation.TargetType!),
+                DecorationContext.FromInvocation(invocation),
                 aspectParameters);
 
             invocation.ReturnValue = decoratorResult;
@@ -42,7 +43,7 @@ namespace Aspector.Core
         protected abstract TResult Decorate(
             Func<object[]?, TResult> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<TAspect> aspectParameters);
     }
 }

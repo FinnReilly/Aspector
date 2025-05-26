@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes.AccessControl;
+using Aspector.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -22,11 +23,11 @@ namespace Aspector.Core.AccessControl
         protected sealed override TResult Decorate(
             Func<object[]?, TResult> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<AuthoriseObjectAccessAttribute<TResult>> aspectParameters)
         {
             var claims = _httpContextAccessor.HttpContext?.User;
-            var logger = GetLogger(decorationContext.DecoratedType);
+            var logger = GetLogger(context.DecoratedType);
 
             var result = targetMethod(parameters);
             if (claims == null)

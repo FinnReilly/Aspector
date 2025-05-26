@@ -1,6 +1,6 @@
 ﻿using Aspector.Core.Attributes.Validation;
+using Aspector.Core.Models;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace Aspector.Core.Validation
 {
@@ -14,13 +14,13 @@ namespace Aspector.Core.Validation
         protected override sealed void Decorate(
             Action<object[]?> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<TAspect> aspectParameters)
         {
-            var logger = GetLogger(decorationContext.DecoratedType);
+            var logger = GetLogger(context.DecoratedType);
             foreach (var aspectParameter in aspectParameters)
             {
-                var retrievedParameters = GetParametersToValidate(aspectParameter, decorationContext.ParameterMetadata, parameters);
+                var retrievedParameters = GetParametersToValidate(aspectParameter, context, parameters);
 
                 foreach(var parameter in retrievedParameters)
                 {
@@ -31,11 +31,11 @@ namespace Aspector.Core.Validation
             targetMethod(parameters);
         }
 
-        protected virtual object[] GetParametersToValidate(TAspect aspectParameter, ParameterInfo[] metadata, object[]? allParameters)
+        protected virtual object[] GetParametersToValidate(TAspect aspectParameter, DecorationContext context, object[]? allParameters)
         {
             if (aspectParameter.ParameterNamesProvided)
             {
-                return aspectParameter.ParameterNames!.Select(name => GetParameterByName(name, metadata, allParameters!)).ToArray();
+                return aspectParameter.ParameterNames!.Select(name => context.GetParameterByName(name, allParameters!)).ToArray();
             }
 
             return [];

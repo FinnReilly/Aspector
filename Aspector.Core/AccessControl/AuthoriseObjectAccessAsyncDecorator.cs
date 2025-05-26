@@ -1,7 +1,7 @@
 ﻿using Aspector.Core.Attributes.AccessControl;
+using Aspector.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 using System.Security.Claims;
 
 namespace Aspector.Core.AccessControl
@@ -22,11 +22,11 @@ namespace Aspector.Core.AccessControl
         protected override sealed async Task<TResult> Decorate(
             Func<object[]?, Task<TResult>> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<AuthoriseObjectAccessAsyncAttribute<TResult>> aspectParameters)
         {
             var claims = _httpContextAccessor.HttpContext?.User;
-            var logger = GetLogger(decorationContext.DecoratedType);
+            var logger = GetLogger(context.DecoratedType);
 
             var result = await targetMethod(parameters);
             if (claims == null)

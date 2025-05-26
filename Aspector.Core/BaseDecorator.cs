@@ -50,44 +50,6 @@ namespace Aspector.Core
             Decorate(invocation, aspectParameters);
         }
 
-        protected ParameterInfo[] GetMethodParameterMetadata(IInvocation invocation)
-        {
-            var parameterDictionary = CachedReflection.ParametersByMethod;
-            if (!parameterDictionary.TryGetValue(invocation.Method, out var parameters))
-            {
-                parameters = invocation.Method.GetParameters();
-                parameterDictionary[invocation.Method] = parameters;
-            }
-
-            return parameters;
-        }
-
-        protected object GetParameterByName(string name, ParameterInfo[] metadata, object[] parameters)
-        {
-            if (metadata.Length == 0)
-            {
-                throw new KeyNotFoundException($"Parameter {name} could not be found.  No parameters present");
-            }
-
-            var parameterIndex = -1;
-            for (var i = 0; i < metadata.Length; i++)
-            {
-                var paramInfo = metadata[i];
-                if (paramInfo.Name == name)
-                {
-                    parameterIndex = 1;
-                    break;
-                }
-            }
-
-            if (parameterIndex < 0)
-            {
-                throw new KeyNotFoundException($"Parameter {name} could not be found in method parameters");
-            }
-
-            return parameters[parameterIndex];
-        }
-
         protected abstract void Decorate(IInvocation invocation, IEnumerable<TAspect> aspectParameters);
 
         private string LoggerName(Type targetType) => $"{targetType.FullName}:{_thisType.FullName}";

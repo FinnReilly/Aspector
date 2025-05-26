@@ -1,7 +1,7 @@
 ﻿using Aspector.Core.Attributes.Caching;
+using Aspector.Core.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace Aspector.Core.Caching
 {
@@ -18,11 +18,11 @@ namespace Aspector.Core.Caching
         protected override async Task<object> Decorate(
             Func<object[]?, Task<object>> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<CacheResultAsyncAttribute> aspectParameters)
         {
             var firstArg = aspectParameters.First();
-            var cacheKey = firstArg.CacheKey ?? $"{decorationContext.DecoratedType.FullName}.{decorationContext.DecoratedMethod.Name}";
+            var cacheKey = firstArg.CacheKey ?? $"{context.DecoratedType.FullName}.{context.DecoratedMethod.Name}";
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
                 && cachedValue != null)
             {

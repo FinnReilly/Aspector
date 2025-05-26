@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes.Logging;
+using Aspector.Core.Models;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
@@ -13,10 +14,10 @@ namespace Aspector.Core.Logging
         protected override async Task Decorate(
             Func<object[]?, Task> targetMethod,
             object[]? parameters,
-            (ParameterInfo[] ParameterMetadata, MethodInfo DecoratedMethod, Type DecoratedType) decorationContext,
+            DecorationContext context,
             IEnumerable<AddLogPropertyAsyncAttribute> aspectParameters)
         {
-            var logger = GetLogger(decorationContext.DecoratedType);
+            var logger = GetLogger(context.DecoratedType);
             var logscopeDictionary = new Dictionary<string, object?>();
 
             foreach (var aspectParameter in aspectParameters)
@@ -27,7 +28,7 @@ namespace Aspector.Core.Logging
                     continue;
                 }
 
-                logscopeDictionary[aspectParameter.LoggingContextKey] = GetParameterByName(aspectParameter.LoggableParameterName!, decorationContext.ParameterMetadata, parameters!);
+                logscopeDictionary[aspectParameter.LoggingContextKey] = context.GetParameterByName(aspectParameter.LoggableParameterName!, parameters!);
             }
 
             using var logScope = logger.BeginScope(logscopeDictionary);
