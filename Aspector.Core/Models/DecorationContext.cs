@@ -18,7 +18,9 @@ namespace Aspector.Core.Models
             DecoratedType = type;
         }
 
-        public object GetParameterByName(string name, object[] parameters)
+        public object GetParameterByName(string name, object[] parameters) => GetParameterByName<object>(name, parameters);
+
+        public TParam GetParameterByName<TParam>(string name, object[] parameters)
         {
             if (ParameterMetadata.Count == 0)
             {
@@ -29,7 +31,7 @@ namespace Aspector.Core.Models
             for (var i = 0; i < ParameterMetadata.Count; i++)
             {
                 var paramInfo = ParameterMetadata.ElementAt(i);
-                if (paramInfo.Name == name)
+                if (paramInfo.Name == name && paramInfo.ParameterType.IsAssignableTo(typeof(TParam)))
                 {
                     parameterIndex = i;
                     break;
@@ -38,10 +40,11 @@ namespace Aspector.Core.Models
 
             if (parameterIndex < 0)
             {
-                throw new KeyNotFoundException($"Parameter {name} could not be found in method parameters for {DecoratedMethod.Name}");
+                var typeDescription = typeof(TParam) == typeof(object) ? string.Empty : $", with type of {typeof(TParam).Name}";
+                throw new KeyNotFoundException($"Parameter {name}{typeDescription} could not be found in method parameters for {DecoratedMethod.Name}");
             }
 
-            return parameters[parameterIndex];
+            return (TParam)parameters[parameterIndex];
         }
 
         public static DecorationContext FromInvocation(IInvocation invocationInfo)
