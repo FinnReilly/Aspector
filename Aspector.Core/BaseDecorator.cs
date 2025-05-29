@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
@@ -16,12 +17,14 @@ namespace Aspector.Core
         private readonly ILoggerFactory _loggerFactory;
         private readonly Type _thisType;
         private readonly int LayerIndex;
+        protected readonly CancellationToken _globalCancellationToken;
 
-        public BaseDecorator(ILoggerFactory loggerFactory, int layerIndex)
+        public BaseDecorator(IDecoratorServices services, int layerIndex)
         {
-            _loggerFactory = loggerFactory;
+            _loggerFactory = services;
             _thisType = this.GetType();
             LayerIndex = layerIndex;
+            _globalCancellationToken = services.GlobalToken;
         }
 
         public Type AttributeType { get; } = typeof(TAspect);

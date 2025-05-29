@@ -7,15 +7,30 @@ namespace Aspector.Core.Models
 {
     public class DecorationContext
     {
+        private object?[] _receivedParameters;
+
         public IReadOnlyCollection<ParameterInfo> ParameterMetadata { get; }
         public MethodInfo DecoratedMethod { get; }
         public Type DecoratedType { get; }
+        public CancellationToken CancellationToken { get; }
+        public bool CancellationTokenIsGlobal { get; } = true;
 
-        public DecorationContext(IEnumerable<ParameterInfo> parameters, MethodInfo method, Type type)
+        public DecorationContext(IEnumerable<ParameterInfo> parameters, MethodInfo method, Type type, CancellationToken globalCancellationToken, object?[]? receivedParameters = null)
         {
+            _receivedParameters = receivedParameters ?? [];
+
             ParameterMetadata = new ReadOnlyCollection<ParameterInfo>(parameters.ToList());
             DecoratedMethod = method;
             DecoratedType = type;
+            CancellationToken = globalCancellationToken;
+
+            var singlePassedCancellationToken = GetFirstOrDefault<CancellationToken>(_receivedParameters);
+
+            if (singlePassedCancellationToken != default)
+            {
+                CancellationToken = singlePassedCancellationToken;
+                CancellationTokenIsGlobal = false;
+            }
         }
 
         public object GetParameterByName(string name, object[] parameters) => GetParameterByName<object>(name, parameters);
@@ -47,7 +62,28 @@ namespace Aspector.Core.Models
             return (TParam)parameters[parameterIndex];
         }
 
-        public static DecorationContext FromInvocation(IInvocation invocationInfo)
+        public TParam? GetFirstOrDefault<TParam>(object?[] parameters, bool returnDefaultForMultiple = false)
+        {
+            var foundParameters = new List<int>();
+            for (var i = 0; i < ParameterMetadata.Count; i++)
+            {
+                var paramInfo = ParameterMetadata.ElementAt(i);
+                if (paramInfo.ParameterType.IsAssignableTo(typeof(TParam)))
+                {
+                    foundParameters.Add(i);
+                }
+            }
+
+            if (foundParameters.Count == 0
+                || (returnDefaultForMultiple && foundParameters.Count > 1))
+            {
+                return default;
+            }
+
+            return (TParam)parameters[foundParameters[0]]!;
+        }
+
+        public static DecorationContext FromInvocation(IInvocation invocationInfo, CancellationToken globalToken)
         {
             var parameterDictionary = CachedReflection.ParametersByMethod;
             if (!parameterDictionary.TryGetValue(invocationInfo.Method, out var parameters))
@@ -56,7 +92,7 @@ namespace Aspector.Core.Models
                 parameterDictionary[invocationInfo.Method] = parameters;
             }
 
-            return new DecorationContext(parameters, invocationInfo.Method, invocationInfo.TargetType!);
+            return new DecorationContext(parameters, invocationInfo.Method, invocationInfo.TargetType!, globalToken, invocationInfo.Arguments!);
         }
     }
 }

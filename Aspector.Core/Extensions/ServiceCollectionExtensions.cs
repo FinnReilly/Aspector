@@ -1,6 +1,6 @@
 ﻿using Aspector.Core.Attributes;
-using Aspector.Core.Models;
 using Aspector.Core.Models.Registration;
+using Aspector.Core.Services;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,6 +18,7 @@ namespace Aspector.Core.Extensions
             {
                 services.AddMemoryCache();
             }
+            services.AddSingleton<IDecoratorServices, DecoratorServices>();
 
             var allTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes());
 

@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -9,8 +10,8 @@ namespace Aspector.Core
     public abstract class ResultDecorator<TAspect, TResult> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
     {
-        protected ResultDecorator(ILoggerFactory loggerFactory, int layerIndex) 
-            : base(loggerFactory, layerIndex)
+        protected ResultDecorator(IDecoratorServices services, int layerIndex) 
+            : base(services, layerIndex)
         {
         }
 
@@ -34,7 +35,7 @@ namespace Aspector.Core
             var decoratorResult = Decorate(
                 targetMethodAsAction,
                 invocation.Arguments!,
-                DecorationContext.FromInvocation(invocation),
+                DecorationContext.FromInvocation(invocation, _globalCancellationToken),
                 aspectParameters);
 
             invocation.ReturnValue = decoratorResult;

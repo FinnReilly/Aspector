@@ -1,13 +1,12 @@
 ﻿using Aspector.Core.Attributes.Logging;
 using Aspector.Core.Models;
-using Microsoft.Extensions.Logging;
-using System.Reflection;
+using Aspector.Core.Services;
 
 namespace Aspector.Core.Logging
 {
     public class AddLogPropertyAsyncAspect : AsyncDecorator<AddLogPropertyAsyncAttribute>
     {
-        public AddLogPropertyAsyncAspect(ILoggerFactory loggerFactory, int layerIndex) : base(loggerFactory, layerIndex)
+        public AddLogPropertyAsyncAspect(IDecoratorServices services, int layerIndex) : base(services, layerIndex)
         {
         }
 

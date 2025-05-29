@@ -6,6 +6,7 @@ namespace Aspector.Core.Tests.Models
     public class DecorationContextTests
     {
         private DecorationContext _sut;
+        private CancellationToken _globalToken;
 
         [SetUp]
         public void Setup()
@@ -13,8 +14,9 @@ namespace Aspector.Core.Tests.Models
             var targetType = typeof(ExampleDecoratedClass);
             var targetMethod = targetType.GetMethod("ExampleMethod");
             var parameters = targetMethod!.GetParameters();
+            _globalToken = new CancellationToken();
 
-            _sut = new DecorationContext(parameters, targetMethod, targetType);
+            _sut = new DecorationContext(parameters, targetMethod, targetType, _globalToken);
         }
 
         [Test]
@@ -25,7 +27,7 @@ namespace Aspector.Core.Tests.Models
             var targetMethod = targetType.GetMethod("ExampleMethod_NoParams");
             var parameters = targetMethod!.GetParameters();
 
-            var sut = new DecorationContext(parameters, targetMethod, targetType);
+            var sut = new DecorationContext(parameters, targetMethod, targetType, _globalToken);
 
             var expectedErrorMessage = "Parameter myParam could not be found.  No parameters required for ExampleMethod_NoParams";
 

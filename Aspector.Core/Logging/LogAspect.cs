@@ -1,12 +1,13 @@
 ﻿using Aspector.Core.Attributes.Logging;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Aspector.Core.Logging
 {
     public class LogAspect : VoidDecorator<LogAttribute>
     {
-        public LogAspect(ILoggerFactory loggerFactory, int layerIndex) : base(loggerFactory, layerIndex)
+        public LogAspect(IDecoratorServices services, int layerIndex) : base(services, layerIndex)
         {
         }
 

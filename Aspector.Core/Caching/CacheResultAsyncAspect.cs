@@ -1,7 +1,7 @@
 ﻿using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 
 namespace Aspector.Core.Caching
 {
@@ -9,8 +9,8 @@ namespace Aspector.Core.Caching
     {
         private readonly IMemoryCache _memoryCache;
 
-        public CacheResultAsyncAspect(IMemoryCache memoryCache, ILoggerFactory loggerFactory, int layerIndex)
-            : base(loggerFactory, layerIndex)
+        public CacheResultAsyncAspect(IMemoryCache memoryCache, IDecoratorServices services, int layerIndex)
+            : base(services, layerIndex)
         {
             _memoryCache = memoryCache;
         }

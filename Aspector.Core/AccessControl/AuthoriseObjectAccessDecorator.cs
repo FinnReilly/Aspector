@@ -1,8 +1,8 @@
 ﻿using Aspector.Core.Attributes.AccessControl;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 using System.Security.Claims;
 
 namespace Aspector.Core.AccessControl
@@ -12,10 +12,10 @@ namespace Aspector.Core.AccessControl
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AuthoriseObjectAccessDecorator(
-            ILoggerFactory loggerFactory,
+            IDecoratorServices services,
             IHttpContextAccessor httpContextAccessor,
             int layerIndex) 
-            : base(loggerFactory, layerIndex)
+            : base(services, layerIndex)
         {
             _httpContextAccessor = httpContextAccessor;
         }

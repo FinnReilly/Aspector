@@ -1,13 +1,13 @@
 ﻿using Aspector.Core.Attributes;
-using Microsoft.Extensions.Logging;
+using Aspector.Core.Services;
 
 namespace Aspector.Core
 {
     public abstract class AsyncDecorator<TAspect> : ResultDecorator<TAspect, Task>
         where TAspect : AspectAttribute
     {
-        protected AsyncDecorator(ILoggerFactory loggerFactory, int layerIndex) 
-            : base(loggerFactory, layerIndex)
+        protected AsyncDecorator(IDecoratorServices services, int layerIndex) 
+            : base(services, layerIndex)
         {
         }
     }

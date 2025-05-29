@@ -1,13 +1,13 @@
 ﻿using Aspector.Core.Attributes.Validation;
 using Aspector.Core.Models;
-using Microsoft.Extensions.Logging;
+using Aspector.Core.Services;
 
 namespace Aspector.Core.Validation
 {
     public abstract class ValidateDecorator<TAspect> : VoidDecorator<TAspect>
         where TAspect : ValidateAttribute
     {
-        protected ValidateDecorator(ILoggerFactory loggerFactory, int layerIndex) : base(loggerFactory, layerIndex)
+        protected ValidateDecorator(IDecoratorServices services, int layerIndex) : base(services, layerIndex)
         {
         }
 

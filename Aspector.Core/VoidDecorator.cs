@@ -1,15 +1,15 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Models;
+using Aspector.Core.Services;
 using Castle.DynamicProxy;
-using Microsoft.Extensions.Logging;
 
 namespace Aspector.Core
 {
     public abstract class VoidDecorator<TAspect> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
     {
-        protected VoidDecorator(ILoggerFactory loggerFactory, int layerIndex) 
-            : base(loggerFactory, layerIndex)
+        protected VoidDecorator(IDecoratorServices services, int layerIndex) 
+            : base(services, layerIndex)
         {
         }
 
@@ -31,7 +31,7 @@ namespace Aspector.Core
             Decorate(
                 targetMethodAsAction,
                 invocation.Arguments!,
-                DecorationContext.FromInvocation(invocation),
+                DecorationContext.FromInvocation(invocation, _globalCancellationToken),
                 aspectParameters);
         }
 
