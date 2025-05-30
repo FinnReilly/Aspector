@@ -1,7 +1,9 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Exceptions;
 using Aspector.Core.Models.Registration;
 using Aspector.Core.Services;
 using Aspector.Core.Static;
+using Castle.Core.Internal;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -167,10 +169,26 @@ namespace Aspector.Core.Extensions
                         var aspectImplementations = matchingAspectAttributeSummary.WrapOrderFromInnermost
                             .Select(
                                 aspectOrderDescriptor => 
-                                    (IInterceptor)provider
+                                {
+                                    var implementationType = implementationDictionary[aspectOrderDescriptor.AspectType];
+
+                                    var lifetimeAttribute = implementationType.GetAttribute<AspectLifetimeAttribute>();
+                                    var implementationLifetime = lifetimeAttribute?.Lifetime ?? ServiceLifetime.Singleton;
+
+                                    if (serviceDescriptor.Lifetime == ServiceLifetime.Singleton
+                                        && implementationLifetime != ServiceLifetime.Singleton)
+                                    {
+                                        throw new LifetimeMismatchException(
+                                            serviceDescriptor.ImplementationType ?? serviceDescriptor.ServiceType,
+                                            implementationType,
+                                            implementationLifetime);
+                                    }
+
+                                    return (IInterceptor)provider
                                         .GetRequiredKeyedService(
                                             implementationDictionary[aspectOrderDescriptor.AspectType],
-                                            aspectOrderDescriptor.LayerIndex))
+                                            aspectOrderDescriptor.LayerIndex); 
+                                })
                             .Reverse()
                             .ToArray();
 
