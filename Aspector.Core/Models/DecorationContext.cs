@@ -7,8 +7,6 @@ namespace Aspector.Core.Models
 {
     public class DecorationContext
     {
-        private object?[] _receivedParameters;
-
         public IReadOnlyCollection<ParameterInfo> ParameterMetadata { get; }
         public MethodInfo DecoratedMethod { get; }
         public Type DecoratedType { get; }
@@ -17,14 +15,14 @@ namespace Aspector.Core.Models
 
         public DecorationContext(IEnumerable<ParameterInfo> parameters, MethodInfo method, Type type, CancellationToken globalCancellationToken, object?[]? receivedParameters = null)
         {
-            _receivedParameters = receivedParameters ?? [];
+            receivedParameters ??= [];
 
             ParameterMetadata = new ReadOnlyCollection<ParameterInfo>(parameters.ToList());
             DecoratedMethod = method;
             DecoratedType = type;
             CancellationToken = globalCancellationToken;
 
-            var singlePassedCancellationToken = GetFirstOrDefault<CancellationToken>(_receivedParameters);
+            var singlePassedCancellationToken = GetFirstOrDefault<CancellationToken>(receivedParameters);
 
             if (singlePassedCancellationToken != default)
             {
@@ -65,7 +63,7 @@ namespace Aspector.Core.Models
         public TParam? GetFirstOrDefault<TParam>(object?[] parameters, bool returnDefaultForMultiple = false)
         {
             var foundParameters = new List<int>();
-            for (var i = 0; i < ParameterMetadata.Count; i++)
+            for (var i = 0; i < ParameterMetadata.Count && i < parameters.Length; i++)
             {
                 var paramInfo = ParameterMetadata.ElementAt(i);
                 if (paramInfo.ParameterType.IsAssignableTo(typeof(TParam)))
