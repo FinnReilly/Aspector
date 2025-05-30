@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspector.Examples", "Aspector\Aspector.Examples.csproj", "{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspector.Examples", "Aspector.Examples\Aspector.Examples.csproj", "{BB2CC0FF-E37B-4343-B798-384E9DF9A1B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspector.Core", "Aspector.Core\Aspector.Core.csproj", "{1CC1F9D9-3937-4143-B34C-198346132E76}"
 EndProject
