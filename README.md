@@ -54,7 +54,7 @@ By default, Decorators are registered as singletons.  This behaviour can be conf
 
 #### Layering
 
-Aspects will be applied to your methods in the same order that they are added in code.  Where there are multiple consecutive attributes of the same type, these will be handled by the same decorator (to avoid excessive layers of proxying).  Where are some attributes of type A, followed by one of type B and some more of type A, the two separate type A layers will be handled by different instances of the same Decorator.
+Aspects will be applied to your methods in the same order that they are added in code.  Where there are multiple consecutive attributes of the same type, these will be handled by the same Decorator (to avoid excessive layers of proxying).  Where are some attributes of type A, followed by one of type B and some more of type A, the two separate type A layers will be handled by different instances of the same Decorator.
 
 Take this example:
 

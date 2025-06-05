@@ -31,16 +31,36 @@ namespace Aspector.Core.Models
             }
         }
 
-        public object GetParameterByName(string name, object[] parameters) => GetParameterByName<object>(name, parameters);
+        public bool TrySetParameterByName(string name, object[] parameters, object? parameter)
+            => TrySetParameterByName<object>(name, parameters, parameter);
 
-        public TParam GetParameterByName<TParam>(string name, object[] parameters)
+        public bool TrySetParameterByName<TParam>(string name, object[] parameters, TParam? param)
         {
+            var parameterIndex = TryGetParameterByName<TParam>(name, parameters, out var _);
+            if (parameterIndex < 0)
+            {
+                return false;
+            }
+
+            parameters[parameterIndex] = param!;
+            return true;
+        }
+
+        public object? GetParameterByName(string name, object[] parameters) => GetParameterByName<object>(name, parameters);
+
+        public int TryGetParameterByName(string name, object[] parameters, out object? parameter)
+            => TryGetParameterByName<object>(name, parameters, out parameter);
+
+        public int TryGetParameterByName<TParam>(string name, object?[] parameters, out TParam? param)
+        {
+            param = default;
+            var parameterIndex = -1;
+
             if (ParameterMetadata.Count == 0)
             {
                 throw new KeyNotFoundException($"Parameter {name} could not be found.  No parameters required for {DecoratedMethod.Name}");
             }
 
-            var parameterIndex = -1;
             for (var i = 0; i < ParameterMetadata.Count; i++)
             {
                 var paramInfo = ParameterMetadata.ElementAt(i);
@@ -57,28 +77,56 @@ namespace Aspector.Core.Models
                 throw new KeyNotFoundException($"Parameter {name}{typeDescription} could not be found in method parameters for {DecoratedMethod.Name}");
             }
 
-            return (TParam)parameters[parameterIndex];
+            param = (TParam?)parameters[parameterIndex];
+            return parameterIndex;
+        }
+
+        public TParam? GetParameterByName<TParam>(string name, object[] parameters)
+        {
+            TryGetParameterByName<TParam>(name, parameters, out var foundParam);
+            return foundParam;
         }
 
         public TParam? GetFirstOrDefault<TParam>(object?[] parameters, bool returnDefaultForMultiple = false)
         {
-            var foundParameters = new List<int>();
+            TryGetFirstOrDefault<TParam>(parameters, out var foundParam, returnDefaultForMultiple);
+            return foundParam;
+        }
+
+        public bool TrySetFirst<TParam>(object?[] parameters, TParam value, bool failIfMultiple = false)
+        {
+            var parameterIndex = TryGetFirstOrDefault<TParam>(parameters, out var _, failIfMultiple);
+            
+            if (parameterIndex < 0)
+            {
+                return false;
+            }
+
+            parameters[parameterIndex] = value;
+            return true;
+        }
+
+        public int TryGetFirstOrDefault<TParam>(object?[] parameters, out TParam? foundParam, bool returnDefaultForMultiple = false)
+        {
+            var foundParameterIndices = new List<int>();
             for (var i = 0; i < ParameterMetadata.Count && i < parameters.Length; i++)
             {
                 var paramInfo = ParameterMetadata.ElementAt(i);
                 if (paramInfo.ParameterType.IsAssignableTo(typeof(TParam)))
                 {
-                    foundParameters.Add(i);
+                    foundParameterIndices.Add(i);
                 }
             }
 
-            if (foundParameters.Count == 0
-                || (returnDefaultForMultiple && foundParameters.Count > 1))
+            if (foundParameterIndices.Count == 0
+                || (returnDefaultForMultiple && foundParameterIndices.Count > 1))
             {
-                return default;
+                foundParam = default;
+                return -1;
             }
 
-            return (TParam)parameters[foundParameters[0]]!;
+            foundParam = (TParam)parameters[foundParameterIndices[0]]!;
+            return foundParameterIndices[0];
         }
 
         public static DecorationContext FromInvocation(IInvocation invocationInfo, CancellationToken globalToken)

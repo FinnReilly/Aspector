@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IWeatherService, WeatherService>();
-builder.Services.AddMemoryCache();
 
 builder.Services.AddAspects();
 
