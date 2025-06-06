@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Decorators;
 using Aspector.Core.Exceptions;
 using Aspector.Core.Models.Registration;
 using Aspector.Core.Services;

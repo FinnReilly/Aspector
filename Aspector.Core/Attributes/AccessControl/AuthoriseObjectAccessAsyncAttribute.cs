@@ -1,4 +1,4 @@
-﻿using Aspector.Core.AccessControl;
+﻿using Aspector.Core.Decorators.AccessControl;
 
 namespace Aspector.Core.Attributes.AccessControl
 {

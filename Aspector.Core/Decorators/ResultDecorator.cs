@@ -5,7 +5,7 @@ using Castle.DynamicProxy;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace Aspector.Core
+namespace Aspector.Core.Decorators
 {
     public abstract class ResultDecorator<TAspect, TResult> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace Aspector.Core
+namespace Aspector.Core.Decorators
 {
     public abstract class BaseDecorator<TAspect> : IInterceptor
         where TAspect : AspectAttribute
@@ -22,7 +22,7 @@ namespace Aspector.Core
         public BaseDecorator(IDecoratorServices services, int layerIndex)
         {
             _loggerFactory = services;
-            _thisType = this.GetType();
+            _thisType = GetType();
             LayerIndex = layerIndex;
             _globalCancellationToken = services.GlobalToken;
         }

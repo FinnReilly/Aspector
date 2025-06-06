@@ -1,8 +1,9 @@
 ﻿using Aspector.Core.Attributes.Validation;
+using Aspector.Core.Decorators;
 using Aspector.Core.Models;
 using Aspector.Core.Services;
 
-namespace Aspector.Core.Validation
+namespace Aspector.Core.Decorators.Validation
 {
     public abstract class ValidateDecorator<TAspect> : VoidDecorator<TAspect>
         where TAspect : ValidateAttribute

@@ -1,15 +1,16 @@
 ﻿using Aspector.Core.Attributes.Caching;
+using Aspector.Core.Decorators;
 using Aspector.Core.Models;
 using Aspector.Core.Services;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Aspector.Core.Caching
+namespace Aspector.Core.Decorators.Caching
 {
-    public class CacheResultAsyncAspect : AsyncResultDecorator<CacheResultAsyncAttribute, object>
+    public class CacheResultAsyncDecorator : AsyncResultDecorator<CacheResultAsyncAttribute, object>
     {
         private readonly IMemoryCache _memoryCache;
 
-        public CacheResultAsyncAspect(IMemoryCache memoryCache, IDecoratorServices services, int layerIndex)
+        public CacheResultAsyncDecorator(IMemoryCache memoryCache, IDecoratorServices services, int layerIndex)
             : base(services, layerIndex)
         {
             _memoryCache = memoryCache;

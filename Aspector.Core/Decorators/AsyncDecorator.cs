@@ -1,7 +1,7 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Services;
 
-namespace Aspector.Core
+namespace Aspector.Core.Decorators
 {
     public abstract class AsyncDecorator<TAspect> : ResultDecorator<TAspect, Task>
         where TAspect : AspectAttribute

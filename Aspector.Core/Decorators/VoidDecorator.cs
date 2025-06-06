@@ -3,7 +3,7 @@ using Aspector.Core.Models;
 using Aspector.Core.Services;
 using Castle.DynamicProxy;
 
-namespace Aspector.Core
+namespace Aspector.Core.Decorators
 {
     public abstract class VoidDecorator<TAspect> : BaseDecorator<TAspect>
         where TAspect : AspectAttribute
