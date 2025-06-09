@@ -1,5 +1,6 @@
 using Aspector.Core.Extensions;
 using Aspector.Services;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,5 +24,9 @@ app.MapGet(
         });
         return service.GetWeather();
     });
+
+app.MapGet(
+    "/weatherforecast/{days}",
+    (IWeatherService service, [FromRoute] int days) => service.GetWeatherForNextNDays(days));
 
 app.Run();

@@ -55,7 +55,7 @@ namespace Aspector.Core.Decorators
             if (method.ReturnType == typeof(void) || !method.ReturnType.IsAssignableTo(typeof(TResult)))
             {
                 throw new InvalidOperationException(
-                    $"A {typeof(TAspect).FullName} can only be used on a method that returns a {typeof(TResult).FullName} or derived type");
+                    $"The {typeof(TAspect).FullName} can only be used on a method that returns a {typeof(TResult).FullName} or derived type");
             }
 
             return base.ValidateUsageOrThrowAsync(parameters, method, parameter, token);

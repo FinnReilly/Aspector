@@ -6,8 +6,6 @@
         public bool SlidingExpiration { get; }
         public string? CacheKey { get; set; } = null;
 
-        public CacheResultAttribute() { }
-
         public CacheResultAttribute(double timeToCacheSeconds)
         {
             TimeToCacheMilliseconds = (int)Math.Floor(timeToCacheSeconds * 1000);

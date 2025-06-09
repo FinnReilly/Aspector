@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Decorators;
+using Aspector.Core.Models.Registration;
 using Aspector.Core.Static;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,52 +24,47 @@ namespace Aspector.Core.Validation
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var decoratorsByAttributeType = new Dictionary<Type, Type>();
-
+            // it feels more helpful to enumerate ALL usage mistakes early on than to fail one at a time
             var allExceptions = new List<Exception>();
 
-            foreach (var methodMap in CachedReflection.ParametersByMethod)
+            foreach (var decoratedClass in CachedReflection.AttributeSummariesByClass)
             {
-                var method = methodMap.Key;
-                var parameters = methodMap.Value;
-                var decoratedType = method.DeclaringType;
+                var decoratedType = decoratedClass.Key;
+                var aspectUsageSummary = decoratedClass.Value;
 
-                var aspectUsageSummary = CachedReflection.AttributeSummariesByClass[decoratedType!];
-
-                if (!aspectUsageSummary.LayersFromInnermostByMethod.TryGetValue(method, out var layers))
+                foreach (var decoratedMethod in aspectUsageSummary.LayersFromInnermostByMethod)
                 {
-                    continue;
-                }
-
-                foreach (var layer in layers) 
-                {
-                    var matchingDecoratorImplementation = CachedReflection.DecoratorTypesByAspectAttribute[layer.AspectType];
-
-                    try
+                    var method = decoratedMethod.Key;
+                    var parameters = method.GetParameters();
+                    foreach (var layer in decoratedMethod.Value)
                     {
+                        var matchingDecoratorImplementation = CachedReflection.DecoratorTypesByAspectAttribute[layer.AspectType];
 
-                        await ValidateForAttribute(
-                            layer.AspectType,
-                            matchingDecoratorImplementation,
-                            parameters,
-                            method,
-                            layer,
-                            cancellationToken);
-                    }
-                    catch(Exception e)
-                    {
-                        _logger.LogError(
-                            e,
-                            "An error was thrown while analysing aspect usage within your application : {ExceptionMessage}",
-                            e.Message);
+                        try
+                        {
+                            await ValidateForAttribute(
+                                matchingDecoratorImplementation,
+                                parameters,
+                                method,
+                                layer,
+                                cancellationToken);
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(
+                                e,
+                                "An error was thrown while analysing aspect usage within your application : {ExceptionMessage}",
+                                e.InnerException?.Message ?? e.Message);
 
-                        allExceptions.Add(e);
+                            allExceptions.Add(e.InnerException ?? e);
+                        }
                     }
                 }
             }
 
             if (allExceptions.Count > 0)
             {
+                // stop host
                 throw new AggregateException(allExceptions);
             }
         }
@@ -76,14 +72,13 @@ namespace Aspector.Core.Validation
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         private Task ValidateForAttribute(
-            Type attributeType,
             Type implementedDecoratorType,
             IEnumerable<ParameterInfo> parameters,
             MethodInfo method,
-            IEnumerable<object> actualAspectAttributes,
+            AspectAttributeLayer actualAspectAttributes,
             CancellationToken token)
         {
-            var service = _serviceProvider.GetRequiredService(implementedDecoratorType);
+            var service = _serviceProvider.GetRequiredKeyedService(implementedDecoratorType, actualAspectAttributes.LayerIndex);
 
             var methodToCall = implementedDecoratorType.GetMethod(nameof(BaseDecorator<AspectAttribute>.ValidateUsageOrThrowAsync));
             var allMethodCalls = actualAspectAttributes.Select(

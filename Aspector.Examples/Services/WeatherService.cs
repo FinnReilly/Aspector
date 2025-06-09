@@ -30,8 +30,14 @@ namespace Aspector.Services
                 ["IsFromCache"] = false
             });
 
+            return GetWeatherForNextNDays(5);
+        }
+
+        [CacheResultAsync(timeToCacheSeconds: 5.2)]
+        public IEnumerable<WeatherForecast> GetWeatherForNextNDays(int n)
+        {
             _logger.LogInformation("Getting fresh data");
-            var forecast = Enumerable.Range(1, 5).Select(index =>
+            var forecast = Enumerable.Range(1, n).Select(index =>
             new WeatherForecast
             (
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
