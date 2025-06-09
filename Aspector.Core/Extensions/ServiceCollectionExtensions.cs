@@ -1,9 +1,11 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Decorators;
 using Aspector.Core.Exceptions;
+using Aspector.Core.Models.Config;
 using Aspector.Core.Models.Registration;
 using Aspector.Core.Services;
 using Aspector.Core.Static;
+using Aspector.Core.Validation;
 using Castle.Core.Internal;
 using Castle.DynamicProxy;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,8 +16,15 @@ namespace Aspector.Core.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddAspects(this IServiceCollection services)
+        private static AspectorSettings _defaultSettings = new AspectorSettings
         {
+            ValidateAspectUsage = true
+        };
+
+        public static IServiceCollection AddAspects(this IServiceCollection services, Action<AspectorSettings>? configurator = null)
+        {
+            configurator?.Invoke(_defaultSettings);
+
             services.AddSingleton(new ProxyGenerator());
             if (!services.Any(s => s.ServiceType == typeof(IMemoryCache)))
             {
@@ -56,7 +65,7 @@ namespace Aspector.Core.Extensions
                                     decoratedMethods.Select(
                                         method => (
                                             Method: method,
-                                            Aspects: method.GetCustomAttributes()
+                                            Aspects: method.GetCustomAttributes(typeof(AspectAttribute), inherit: true)
                                                 .Where(a => usedAttributes.Contains(a.GetType()))
                                                 .Cast<AspectAttribute>()
                                                 .ToArray()))
@@ -200,6 +209,14 @@ namespace Aspector.Core.Extensions
                 var index = services.IndexOf(serviceDescriptor);
                 services.Insert(index, replacement);
                 services.Remove(serviceDescriptor);
+            }
+
+            CachedReflection.DecoratorTypesByAspectAttribute = implementationDictionary;
+
+            if (_defaultSettings.ValidateAspectUsage)
+            {
+                // add validators and validation hosted service to service collection
+                services.AddHostedService<AspectValidatorsService>();
             }
             
             return services;

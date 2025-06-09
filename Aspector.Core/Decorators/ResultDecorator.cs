@@ -2,7 +2,6 @@
 using Aspector.Core.Models;
 using Aspector.Core.Services;
 using Castle.DynamicProxy;
-using Microsoft.Extensions.Logging;
 using System.Reflection;
 
 namespace Aspector.Core.Decorators
@@ -46,5 +45,20 @@ namespace Aspector.Core.Decorators
             object[]? parameters,
             DecorationContext context,
             IEnumerable<TAspect> aspectParameters);
+
+        public override Task ValidateUsageOrThrowAsync(
+            IEnumerable<ParameterInfo> parameters,
+            MethodInfo method,
+            TAspect parameter,
+            CancellationToken token)
+        {
+            if (method.ReturnType == typeof(void) || !method.ReturnType.IsAssignableTo(typeof(TResult)))
+            {
+                throw new InvalidOperationException(
+                    $"A {typeof(TAspect).FullName} can only be used on a method that returns a {typeof(TResult).FullName} or derived type");
+            }
+
+            return base.ValidateUsageOrThrowAsync(parameters, method, parameter, token);
+        }
     }
 }

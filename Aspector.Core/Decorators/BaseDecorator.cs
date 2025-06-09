@@ -59,5 +59,10 @@ namespace Aspector.Core.Decorators
         private string LoggerName(Type targetType) => $"{targetType.FullName}:{_thisType.FullName}";
         
         protected ILogger GetLogger(DecorationContext context) => _loggerFactory.CreateLogger(LoggerName(context.DecoratedType));
+
+        public virtual Task ValidateUsageOrThrowAsync(IEnumerable<ParameterInfo> parameters, MethodInfo method, TAspect parameter, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

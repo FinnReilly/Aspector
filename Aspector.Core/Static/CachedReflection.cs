@@ -8,5 +8,6 @@ namespace Aspector.Core.Static
     {
         public static ConcurrentDictionary<MethodInfo, ParameterInfo[]> ParametersByMethod = new ConcurrentDictionary<MethodInfo, ParameterInfo[]>();
         public static Dictionary<Type, AspectAttributeSummary> AttributeSummariesByClass = new Dictionary<Type, AspectAttributeSummary>();
+        public static Dictionary<Type, Type> DecoratorTypesByAspectAttribute = new Dictionary<Type, Type>();
     }
 }

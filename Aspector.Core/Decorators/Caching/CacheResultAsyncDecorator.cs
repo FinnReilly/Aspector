@@ -1,5 +1,4 @@
 ﻿using Aspector.Core.Attributes.Caching;
-using Aspector.Core.Decorators;
 using Aspector.Core.Models;
 using Aspector.Core.Services;
 using Microsoft.Extensions.Caching.Memory;
