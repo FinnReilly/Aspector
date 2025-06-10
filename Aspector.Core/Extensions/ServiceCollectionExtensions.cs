@@ -87,6 +87,7 @@ namespace Aspector.Core.Extensions
                     return baseDecoratorType.MakeGenericType([t]);
                 });
 
+            Type? constructedGenericVersionOfType = null;
             var requiredImplementationTypes = allTypes.Where(
                 t =>
                     { 
@@ -95,20 +96,22 @@ namespace Aspector.Core.Extensions
                             return false;
                         }
 
+                        var typeIsNonConstructedGeneric = t.IsGenericType && !t.IsConstructedGenericType;
+
                         var matchingAssignableType = assignableTypes.Where(
                             aType => 
                             {
-                                if (t.IsGenericType && !t.IsConstructedGenericType)
+                                if (typeIsNonConstructedGeneric)
                                 {
                                     var isAssignable = false;
                                     var analysisComplete = false;
-                                    var attributeTypeToConstruct = aType.GenericTypeArguments[0];
-                                    if (!attributeTypeToConstruct.IsConstructedGenericType)
+                                    var attributeType = aType.GenericTypeArguments[0];
+                                    if (!attributeType.IsConstructedGenericType)
                                     {
                                         return false;
                                     }
 
-                                    attributeTypeToConstruct = attributeTypeToConstruct.GetGenericTypeDefinition();
+                                    // var attributeGenericTypeDefinition = attributeType.GetGenericTypeDefinition();
 
                                     var typeGenerationChecking = t;
                                     while (!analysisComplete)
@@ -127,18 +130,63 @@ namespace Aspector.Core.Extensions
                                         }
 
                                         var candidateGenericParameterType = typeGenerationChecking.GenericTypeArguments
-                                            .FirstOrDefault(arg => arg.IsConstructedGenericType && arg.IsAssignableTo(typeof(AspectAttribute)))?
-                                            .GetGenericTypeDefinition();
+                                            .FirstOrDefault(arg => arg.IsConstructedGenericType && arg.IsAssignableTo(typeof(AspectAttribute)));
 
-                                        if (candidateGenericParameterType != null)
+                                        if (candidateGenericParameterType != null 
+                                            && candidateGenericParameterType.GetGenericTypeDefinition() == attributeType.GetGenericTypeDefinition())
                                         {
-                                            var typeArgumentMatches = candidateGenericParameterType == attributeTypeToConstruct;
+                                            var genericArgumentsForCandidateAttribute = candidateGenericParameterType.GetGenericArguments();
+                                            var genericArgumentsSetByAnalysedType = genericArgumentsForCandidateAttribute
+                                                .Where(x => x.IsGenericParameter && x.DeclaringType == t)
+                                                .ToList();
 
-                                            if (typeArgumentMatches)
+                                            if (!genericArgumentsSetByAnalysedType.Any())
+                                            {
+                                                isAssignable = false;
+                                                analysisComplete = true;
+                                                continue;
+                                            }
+
+                                            var genericArgumentsForAnalysedType = t.GetGenericArguments().Where(a => a.IsGenericTypeParameter).ToArray();
+                                            var constructedGenericAttibuteTypeArguments = attributeType.GenericTypeArguments;
+                                            var canConstructDecoratorWithAttributeTypeArgs = genericArgumentsForAnalysedType.Length <= constructedGenericAttibuteTypeArguments.Length;
+                                            
+                                            if (canConstructDecoratorWithAttributeTypeArgs && constructedGenericAttibuteTypeArguments.Length == genericArgumentsForCandidateAttribute.Length)
                                             {
                                                 isAssignable = true;
+                                                var typeArgs = new List<Type>();
+                                                foreach (var arg in genericArgumentsForAnalysedType)
+                                                {
+                                                    if (!genericArgumentsForAnalysedType.Contains(arg))
+                                                    {
+                                                        continue;
+                                                    }
+
+                                                    for (var i = 0; i < constructedGenericAttibuteTypeArguments.Length; i++)
+                                                    {
+                                                        var genericParameter = genericArgumentsForCandidateAttribute[i];
+                                                        var genericArgument = constructedGenericAttibuteTypeArguments[i];
+                                                        
+                                                        if (genericParameter == arg)
+                                                        {
+                                                            typeArgs.Add(genericArgument);
+                                                        }
+                                                    }
+                                                }
+
+                                                try
+                                                {
+                                                    constructedGenericVersionOfType = t.MakeGenericType(typeArgs.ToArray());
+                                                }
+                                                catch
+                                                {
+                                                    isAssignable = false;
+                                                    analysisComplete = true;
+                                                    continue;
+                                                }
                                             }
                                         }
+
                                         analysisComplete = true;
                                     }
 
@@ -150,12 +198,6 @@ namespace Aspector.Core.Extensions
 
                         if (matchingAssignableType == null)
                         {
-                            if (t.Name.StartsWith("CacheResultDec"))
-                            {
-                                var genericType = typeof(BaseDecorator<>).MakeGenericType(typeof(CacheResultAttribute<>));
-                                var assignableAsExpected = t.IsAssignableTo(genericType);
-                                var assignableToBase = t.IsAssignableTo(baseDecoratorType);
-                            }
                             return false;
                         }
 
@@ -172,8 +214,12 @@ namespace Aspector.Core.Extensions
                                     $" but both {existingImplementation.FullName} and {t.FullName} implement this abstract class");
                             }
 
-                            implementationDictionary.Add(aspectArgumentType, t);
-                            reverseImplementationDictionary.Add(t, aspectArgumentType);
+                            var implementationToAdd = typeIsNonConstructedGeneric ?
+                                constructedGenericVersionOfType!
+                                : t;
+                            
+                            implementationDictionary.Add(aspectArgumentType, implementationToAdd);
+                            reverseImplementationDictionary.Add(implementationToAdd, aspectArgumentType);
                             return true;
                         }
 
