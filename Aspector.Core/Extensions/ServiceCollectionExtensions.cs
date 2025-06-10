@@ -79,8 +79,6 @@ namespace Aspector.Core.Extensions
                         })
                 .ToHashSet();
 
-            var implementationDictionary = new Dictionary<Type, Type>();
-            var reverseImplementationDictionary = new Dictionary<Type, Type>();
             var baseDecoratorType = typeof(BaseDecorator<>);
             var assignableTypes = usedAttributes.Select(
                 t => {
@@ -88,18 +86,19 @@ namespace Aspector.Core.Extensions
                 });
 
             Type? constructedGenericVersionOfType = null;
-            var requiredImplementationTypes = allTypes.Where(
-                t =>
-                    { 
+            var (implementationDictionary, reverseImplementationDictionary) = allTypes.Aggregate(
+                seed: (Implementation: new Dictionary<Type, Type>(), ReverseImplementation: new Dictionary<Type, Type>()),
+                func: (dictionaries, t) =>
+                    {
                         if (t.IsAbstract)
                         {
-                            return false;
+                            return dictionaries;
                         }
 
                         var typeIsNonConstructedGeneric = t.IsGenericType && !t.IsConstructedGenericType;
 
                         var matchingAssignableType = assignableTypes.Where(
-                            aType => 
+                            aType =>
                             {
                                 if (typeIsNonConstructedGeneric)
                                 {
@@ -111,8 +110,6 @@ namespace Aspector.Core.Extensions
                                         return false;
                                     }
 
-                                    // var attributeGenericTypeDefinition = attributeType.GetGenericTypeDefinition();
-
                                     var typeGenerationChecking = t;
                                     while (!analysisComplete)
                                     {
@@ -120,8 +117,8 @@ namespace Aspector.Core.Extensions
                                         {
                                             analysisComplete = true;
                                             continue;
-                                        }    
-                                        
+                                        }
+
                                         // recurse up the tree till we find a constructed generic type
                                         typeGenerationChecking = typeGenerationChecking.BaseType;
                                         if (!typeGenerationChecking.IsConstructedGenericType)
@@ -132,7 +129,7 @@ namespace Aspector.Core.Extensions
                                         var candidateGenericParameterType = typeGenerationChecking.GenericTypeArguments
                                             .FirstOrDefault(arg => arg.IsConstructedGenericType && arg.IsAssignableTo(typeof(AspectAttribute)));
 
-                                        if (candidateGenericParameterType != null 
+                                        if (candidateGenericParameterType != null
                                             && candidateGenericParameterType.GetGenericTypeDefinition() == attributeType.GetGenericTypeDefinition())
                                         {
                                             var genericArgumentsForCandidateAttribute = candidateGenericParameterType.GetGenericArguments();
@@ -150,7 +147,7 @@ namespace Aspector.Core.Extensions
                                             var genericArgumentsForAnalysedType = t.GetGenericArguments().Where(a => a.IsGenericTypeParameter).ToArray();
                                             var constructedGenericAttibuteTypeArguments = attributeType.GenericTypeArguments;
                                             var canConstructDecoratorWithAttributeTypeArgs = genericArgumentsForAnalysedType.Length <= constructedGenericAttibuteTypeArguments.Length;
-                                            
+
                                             if (canConstructDecoratorWithAttributeTypeArgs && constructedGenericAttibuteTypeArguments.Length == genericArgumentsForCandidateAttribute.Length)
                                             {
                                                 isAssignable = true;
@@ -166,7 +163,7 @@ namespace Aspector.Core.Extensions
                                                     {
                                                         var genericParameter = genericArgumentsForCandidateAttribute[i];
                                                         var genericArgument = constructedGenericAttibuteTypeArguments[i];
-                                                        
+
                                                         if (genericParameter == arg)
                                                         {
                                                             typeArgs.Add(genericArgument);
@@ -198,7 +195,7 @@ namespace Aspector.Core.Extensions
 
                         if (matchingAssignableType == null)
                         {
-                            return false;
+                            return dictionaries;
                         }
 
                         var aspectArgumentType = matchingAssignableType
@@ -207,7 +204,7 @@ namespace Aspector.Core.Extensions
 
                         if (usedAttributes.Contains(aspectArgumentType))
                         {
-                            if (implementationDictionary.TryGetValue(aspectArgumentType, out var existingImplementation))
+                            if (dictionaries.Implementation.TryGetValue(aspectArgumentType, out var existingImplementation))
                             {
                                 throw new InvalidOperationException(
                                     $"Only one aspect implementation can inherit from BaseAspectImplementation<{aspectArgumentType.FullName}>," +
@@ -217,14 +214,13 @@ namespace Aspector.Core.Extensions
                             var implementationToAdd = typeIsNonConstructedGeneric ?
                                 constructedGenericVersionOfType!
                                 : t;
-                            
-                            implementationDictionary.Add(aspectArgumentType, implementationToAdd);
-                            reverseImplementationDictionary.Add(implementationToAdd, aspectArgumentType);
-                            return true;
+
+                            dictionaries.Implementation.Add(aspectArgumentType, implementationToAdd);
+                            dictionaries.ReverseImplementation.Add(implementationToAdd, aspectArgumentType);
                         }
 
-                        return false;
-                    }).ToList();
+                        return dictionaries;
+                    });
 
 
             foreach(var attributeType in usedAttributes)
@@ -253,8 +249,8 @@ namespace Aspector.Core.Extensions
                     return maxCounters;
                 });
 
-            // add required implementations, as singleton for now
-            foreach(var type in requiredImplementationTypes)
+            // add required implementations, as singleton by default
+            foreach(var type in reverseImplementationDictionary.Keys)
             {
                 var layersToAdd = maxLayerIndex[reverseImplementationDictionary[type]] + 1;
 
