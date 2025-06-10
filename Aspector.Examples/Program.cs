@@ -27,6 +27,6 @@ app.MapGet(
 
 app.MapGet(
     "/weatherforecast/{days}",
-    (IWeatherService service, [FromRoute] int days) => service.GetWeatherForNextNDays(days));
+    async (IWeatherService service, [FromRoute] int days) => await service.GetWeatherAsync(days));
 
 app.Run();

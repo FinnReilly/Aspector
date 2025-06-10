@@ -1,6 +1,6 @@
 ﻿namespace Aspector.Core.Attributes.Caching
 {
-    public class CacheResultAsyncAttribute : CacheResultAttribute
+    public class CacheResultAsyncAttribute<TResult> : CacheResultAttribute<TResult>
     {
         public CacheResultAsyncAttribute(double timeToCacheSeconds) 
             : base(timeToCacheSeconds)

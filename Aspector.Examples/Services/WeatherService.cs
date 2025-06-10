@@ -21,7 +21,7 @@ namespace Aspector.Services
         [AddLogProperty("IsFromCache", ConstantValue = true)]
         [AddLogProperty("QueryType", ConstantValue = "Weather")]
         [Log("Will check cache for result first")]
-        [CacheResult(timeToCacheSeconds: 10, slidingExpiration: false)]
+        [CacheResult<IEnumerable<WeatherForecast>>(timeToCacheSeconds: 10, slidingExpiration: false)]
         [Log("Cache must have expired, refreshing", LogLevel.Warning)]
         public IEnumerable<WeatherForecast> GetWeather()
         {
@@ -33,7 +33,6 @@ namespace Aspector.Services
             return GetWeatherForNextNDays(5);
         }
 
-        [CacheResultAsync(timeToCacheSeconds: 5.2)]
         public IEnumerable<WeatherForecast> GetWeatherForNextNDays(int n)
         {
             _logger.LogInformation("Getting fresh data");
@@ -47,6 +46,12 @@ namespace Aspector.Services
             .ToArray();
 
             return forecast;
+        }
+
+        [CacheResultAsync<IEnumerable<WeatherForecast>>(timeToCacheSeconds: 5.2)]
+        public Task<IEnumerable<WeatherForecast>> GetWeatherAsync(int n)
+        {
+            return Task.FromResult(GetWeatherForNextNDays(n));
         }
     }
 }

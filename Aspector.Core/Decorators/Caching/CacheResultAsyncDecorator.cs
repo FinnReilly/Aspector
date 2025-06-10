@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Aspector.Core.Decorators.Caching
 {
-    public class CacheResultAsyncDecorator : AsyncResultDecorator<CacheResultAsyncAttribute, object>
+    public class CacheResultAsyncDecorator<TResult> : AsyncResultDecorator<CacheResultAsyncAttribute<TResult>, TResult>
     {
         private readonly IMemoryCache _memoryCache;
 
@@ -15,21 +15,23 @@ namespace Aspector.Core.Decorators.Caching
             _memoryCache = memoryCache;
         }
 
-        protected override async Task<object> Decorate(
-            Func<object[]?, Task<object>> targetMethod,
+        protected override async Task<TResult> Decorate(
+            Func<object[]?, Task<TResult>> targetMethod,
             object[]? parameters,
             DecorationContext context,
-            IEnumerable<CacheResultAsyncAttribute> aspectParameters)
+            IEnumerable<CacheResultAsyncAttribute<TResult>> aspectParameters)
         {
             var firstArg = aspectParameters.First();
             var cacheKey = firstArg.CacheKey ?? $"{context.DecoratedType.FullName}.{context.DecoratedMethod.Name}";
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
-                && cachedValue != null)
+                && cachedValue != null
+                && cachedValue is TResult cachedValueAsResult)
             {
-                return cachedValue;
+                return cachedValueAsResult;
             }
 
-            cachedValue = await targetMethod(parameters);
+            var methodResult = await targetMethod(parameters);
+            cachedValue = methodResult;
 
             using var cacheEntry = _memoryCache.CreateEntry(cacheKey);
             cacheEntry.Value = cachedValue;
@@ -44,7 +46,7 @@ namespace Aspector.Core.Decorators.Caching
                 }
             }
 
-            return cachedValue;
+            return methodResult;
         }
     }
 }

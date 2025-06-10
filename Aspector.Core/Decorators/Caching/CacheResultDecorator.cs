@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Aspector.Core.Decorators.Caching
 {
-    public class CacheResultDecorator : ResultDecorator<CacheResultAttribute, object>
+    public class CacheResultDecorator<TResult> : ResultDecorator<CacheResultAttribute<TResult>, TResult>
     {
         private readonly IMemoryCache _memoryCache;
 
@@ -16,15 +16,20 @@ namespace Aspector.Core.Decorators.Caching
             _memoryCache = memoryCache;
         }
 
-        protected override object Decorate(Func<object[]?, object> targetMethod, object[]? parameters, DecorationContext context, IEnumerable<CacheResultAttribute> aspectParameters)
+        protected override TResult Decorate(
+            Func<object[]?, TResult> targetMethod,
+            object[]? parameters,
+            DecorationContext context,
+            IEnumerable<CacheResultAttribute<TResult>> aspectParameters)
         {
             var aspectParameter = aspectParameters.First();
             var cacheKey = aspectParameter.CacheKey ?? $"{context.DecoratedType?.FullName}.{context.DecoratedMethod.Name}";
 
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
-                && cachedValue != null)
+                && cachedValue != null
+                && cachedValue is TResult cachedValueAsResult)
             {
-                return cachedValue;
+                return cachedValueAsResult;
             }
 
             var result = targetMethod(parameters);

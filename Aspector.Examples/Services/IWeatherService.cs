@@ -7,5 +7,7 @@ namespace Aspector.Services
         IEnumerable<WeatherForecast> GetWeather();
 
         IEnumerable<WeatherForecast> GetWeatherForNextNDays(int n);
+
+        Task<IEnumerable<WeatherForecast>> GetWeatherAsync(int n);
     }
 }

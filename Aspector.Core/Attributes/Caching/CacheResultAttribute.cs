@@ -1,10 +1,11 @@
 ﻿namespace Aspector.Core.Attributes.Caching
 {
-    public class CacheResultAttribute : AspectAttribute
+    public class CacheResultAttribute<TResult> : AspectAttribute
     {
         public int? TimeToCacheMilliseconds { get; }
         public bool SlidingExpiration { get; }
         public string? CacheKey { get; set; } = null;
+        public Type Type { get; } = typeof(TResult);
 
         public CacheResultAttribute(double timeToCacheSeconds)
         {

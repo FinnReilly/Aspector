@@ -1,4 +1,5 @@
 ﻿using Aspector.Core.Attributes;
+using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Decorators;
 using Aspector.Core.Exceptions;
 using Aspector.Core.Models.Config;
@@ -53,10 +54,10 @@ namespace Aspector.Core.Extensions
                             }
 
                             var decoratorTypes = decoratedMethods!.SelectMany(m => m.CustomAttributes.Where(attr => attr.AttributeType.IsAssignableTo(typeof(AspectAttribute))));
-                            
+
                             if (decoratorTypes.Any())
                             {
-                                foreach(var decorator in decoratorTypes)
+                                foreach (var decorator in decoratorTypes)
                                 {
                                     usedAttributes.Add(decorator.AttributeType);
                                 }
@@ -80,8 +81,12 @@ namespace Aspector.Core.Extensions
 
             var implementationDictionary = new Dictionary<Type, Type>();
             var reverseImplementationDictionary = new Dictionary<Type, Type>();
-            var baseAspectType = typeof(BaseDecorator<>);
-            var assignableTypes = usedAttributes.Select(t => baseAspectType.MakeGenericType([t]));
+            var baseDecoratorType = typeof(BaseDecorator<>);
+            var assignableTypes = usedAttributes.Select(
+                t => {
+                    return baseDecoratorType.MakeGenericType([t]);
+                });
+
             var requiredImplementationTypes = allTypes.Where(
                 t =>
                     { 
@@ -90,9 +95,58 @@ namespace Aspector.Core.Extensions
                             return false;
                         }
 
-                        var matchingAssignableType = assignableTypes.Where(aType => t.IsAssignableTo(aType)).FirstOrDefault();
+                        var matchingAssignableType = assignableTypes.Where(
+                            aType => 
+                            {
+                                if (!t.IsConstructedGenericType)
+                                {
+                                    var isAssignable = false;
+                                    var analysisComplete = false;
+                                    var attributeTypeToConstruct = aType.GenericTypeArguments[0];
+                                    if (!attributeTypeToConstruct.IsConstructedGenericType)
+                                    {
+                                        return false;
+                                    }
+
+                                    attributeTypeToConstruct = attributeTypeToConstruct.GetGenericTypeDefinition();
+
+                                    var typeGenerationChecking = t;
+                                    while (!analysisComplete)
+                                    {
+                                        if (typeGenerationChecking.BaseType == null)
+                                        {
+                                            analysisComplete = true;
+                                            continue;
+                                        }    
+                                        
+                                        // recurse up the tree till we find a constructed generic type
+                                        typeGenerationChecking = typeGenerationChecking.BaseType;
+                                        if (!typeGenerationChecking.IsConstructedGenericType)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (typeGenerationChecking.GenericTypeArguments.Any(arg => arg.IsAssignableTo(typeof(AspectAttribute))))
+                                        {
+                                            var typeArgumentMatches = typeGenerationChecking.GenericTypeArguments[0] == attributeTypeToConstruct;
+                                        }
+                                        analysisComplete = true;
+                                    }
+
+                                    return isAssignable;
+                                }
+
+                                return t.IsAssignableTo(aType);
+                            }).FirstOrDefault();
+
                         if (matchingAssignableType == null)
                         {
+                            if (t.Name.StartsWith("CacheResultDec"))
+                            {
+                                var genericType = typeof(BaseDecorator<>).MakeGenericType(typeof(CacheResultAttribute<>));
+                                var assignableAsExpected = t.IsAssignableTo(genericType);
+                                var assignableToBase = t.IsAssignableTo(baseDecoratorType);
+                            }
                             return false;
                         }
 
