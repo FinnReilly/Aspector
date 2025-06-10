@@ -13,7 +13,7 @@ Aspector leverages the object proxy pattern to provide Aspect-Oriented programmi
 To use in your project, simply decorate a class method which implements an interface method, for a service which is registered in your Dependency Injection container.  For example, to add caching to a method on a `PersonService`:
 
 `````````````
-[CacheResultAsync(timeToCacheSeconds: 10, slidingExpiration: false)]
+[CacheResultAsync<Person>(timeToCacheSeconds: 10, slidingExpiration: false)]
 public async Task<Person> GetPerson()
 {
     ...
@@ -62,13 +62,14 @@ Take this example:
 [AddLogProperty("IsFromCache", ConstantValue = true)]
 [AddLogProperty("QueryType", ConstantValue = "Weather")]
 [Log("Will check cache for result first")]
-[CacheResult(timeToCacheSeconds: 10, slidingExpiration: false)]
+[CacheResult<IEnumerable<WeatherForecast>>(timeToCacheSeconds: 10, slidingExpiration: false)]
 [Log("Cache must have expired, refreshing", LogLevel.Warning)]
 public IEnumerable<WeatherForecast> GetWeather()
 ...
 ````````````````````````
 Layering means that the second,  (warning) Log message will only be logged if the `CacheResult` aspect does *not* return a previously cached result, whereas the information log above will be logged for every method call.  Both of these log calls will be handled by a different instance of the `LogDecorator`, whereas the two uses of the `AddLogProperty` Aspect will be handled by the same instance of the `AddLogPropertyDecorator` class.
 
-*For this reason, you are strongly advised not to rely on instance state in your own Decorator implementations.  In larger applications it may become difficult to know which Decorator instance will be executing in which context and cause unexpected behaviour.  If you do need to use state in your Decorators, do so via a dependency.*
+
+> *For this reason, you are strongly advised not to rely on instance state in your own Decorator implementations.  In larger applications it may become difficult to know which Decorator instance will be executing in which context and cause unexpected behaviour.  If you do need to use state in your Decorators, do so via a dependency.*
 
 Another point to bear in mind with layering is that Decorator code which executes *after* the targeted method will execute in the reverse order that they are added in code.
