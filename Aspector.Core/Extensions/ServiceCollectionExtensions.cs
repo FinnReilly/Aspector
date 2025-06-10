@@ -98,7 +98,7 @@ namespace Aspector.Core.Extensions
                         var matchingAssignableType = assignableTypes.Where(
                             aType => 
                             {
-                                if (!t.IsConstructedGenericType)
+                                if (t.IsGenericType && !t.IsConstructedGenericType)
                                 {
                                     var isAssignable = false;
                                     var analysisComplete = false;
@@ -126,9 +126,18 @@ namespace Aspector.Core.Extensions
                                             continue;
                                         }
 
-                                        if (typeGenerationChecking.GenericTypeArguments.Any(arg => arg.IsAssignableTo(typeof(AspectAttribute))))
+                                        var candidateGenericParameterType = typeGenerationChecking.GenericTypeArguments
+                                            .FirstOrDefault(arg => arg.IsConstructedGenericType && arg.IsAssignableTo(typeof(AspectAttribute)))?
+                                            .GetGenericTypeDefinition();
+
+                                        if (candidateGenericParameterType != null)
                                         {
-                                            var typeArgumentMatches = typeGenerationChecking.GenericTypeArguments[0] == attributeTypeToConstruct;
+                                            var typeArgumentMatches = candidateGenericParameterType == attributeTypeToConstruct;
+
+                                            if (typeArgumentMatches)
+                                            {
+                                                isAssignable = true;
+                                            }
                                         }
                                         analysisComplete = true;
                                     }
