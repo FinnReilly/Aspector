@@ -14,9 +14,9 @@ namespace Aspector.Core.Attributes.Logging
             Level = level;
         }
 
-        public LogAttribute(string logString, LogLevel level, List<string> parametersForLogging) : this(logString, level)
+        public LogAttribute(string logString, LogLevel level, string[] parametersForLogging) : this(logString, level)
         {
-            ParametersForLogging = parametersForLogging;
+            ParametersForLogging = parametersForLogging.ToList();
         }
     }
 }

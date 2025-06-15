@@ -49,6 +49,7 @@ namespace Aspector.Services
         }
 
         [CacheResultAsync<IEnumerable<WeatherForecast>>(timeToCacheSeconds: 5.2)]
+        [Log("No cached result found for {weatherForecastCount}, fetching fresh data", LogLevel.Warning, ["n"])]
         public Task<IEnumerable<WeatherForecast>> GetWeatherAsync(int n)
         {
             return Task.FromResult(GetWeatherForNextNDays(n));
