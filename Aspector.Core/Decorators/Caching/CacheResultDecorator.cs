@@ -23,7 +23,20 @@ namespace Aspector.Core.Decorators.Caching
             IEnumerable<CacheResultAttribute<TResult>> aspectParameters)
         {
             var aspectParameter = aspectParameters.First();
-            var cacheKey = aspectParameter.CacheKey ?? $"{context.DecoratedType?.FullName}.{context.DecoratedMethod.Name}";
+            var cacheKey = aspectParameter.CacheKey ?? GetDefaultCacheKey(context);
+
+            if (aspectParameter.CacheKeyParameter != null)
+            {
+                cacheKey = context.GetParameterByName(aspectParameter.CacheKeyParameter, parameters ?? []);
+                if (cacheKey == null)
+                {
+                    cacheKey = aspectParameter.NullCacheKeyBehaviour == NullCacheKeyBehaviour.UseFallback ?
+                        GetDefaultCacheKey(context)
+                        : throw new ArgumentNullException(
+                            nameof(aspectParameter.CacheKeyParameter),
+                            "Could not use as a cache key");
+                }
+            }
 
             if (_memoryCache.TryGetValue(cacheKey, out var cachedValue)
                 && cachedValue != null
@@ -48,5 +61,7 @@ namespace Aspector.Core.Decorators.Caching
 
             return result;
         }
+
+        private string GetDefaultCacheKey(DecorationContext context) => $"{context.DecoratedType?.FullName}.{context.DecoratedMethod.Name}";
     }
 }
