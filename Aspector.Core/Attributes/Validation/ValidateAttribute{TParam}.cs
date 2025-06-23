@@ -5,9 +5,13 @@
     /// 
     /// If none are named then perform validation on the first parameter with the given type
     /// </summary>
-    /// <typeparam name="TParam"></typeparam>
-    public class ValidateAttribute<TParam> : ValidateAttribute
+    /// <typeparam name="TParam">The type of parameter which is being validated</typeparam>
+    public abstract class ValidateAttribute<TParam> : ValidateAttribute
     {
-        public ValidateAttribute() { }
+        /// <param name="parameterNames">A list of named <see cref="TParam"/> parameters to validate</param>
+        public ValidateAttribute(params string[] parameterNames):
+            base(parameterNames)
+        {
+        }
     }
 }

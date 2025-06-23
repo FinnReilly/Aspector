@@ -1,5 +1,4 @@
 ﻿using Aspector.Core.Attributes.Validation;
-using Aspector.Core.Decorators;
 using Aspector.Core.Models;
 using Aspector.Core.Services;
 
@@ -32,16 +31,16 @@ namespace Aspector.Core.Decorators.Validation
             targetMethod(parameters);
         }
 
-        protected virtual object[] GetParametersToValidate(TAspect aspectParameter, DecorationContext context, object[]? allParameters)
+        protected virtual object?[] GetParametersToValidate(TAspect aspectParameter, DecorationContext context, object[]? allParameters)
         {
             if (aspectParameter.ParameterNamesProvided)
             {
-                return aspectParameter.ParameterNames!.Select(name => context.GetParameterByName(name, allParameters!)).ToArray();
+                return aspectParameter.ParameterNames?.Select(name => context.GetParameterByName(name, allParameters!)).ToArray() ?? [];
             }
 
             return [];
         }
 
-        protected abstract void ValidateParameterOrThrow(object parameterValue);
+        protected abstract void ValidateParameterOrThrow(object? parameterValue);
     }
 }

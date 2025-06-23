@@ -22,7 +22,7 @@ namespace Aspector.Core.Attributes.Logging
         /// <param name="logString">A format string to log</param>
         /// <param name="level">The log level to use.  Default is <see cref="LogLevel.Information"/></param>
         /// <param name="parametersForLogging">The name of the parameters whose values will be used in the format string</param>
-        public LogAttribute(string logString, LogLevel level, string[] parametersForLogging) : this(logString, level)
+        public LogAttribute(string logString, LogLevel level, params string[] parametersForLogging) : this(logString, level)
         {
             ParametersForLogging = parametersForLogging.ToList();
         }

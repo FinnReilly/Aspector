@@ -10,6 +10,7 @@
         public List<string>? ParameterNames { get; }
         public bool ParameterNamesProvided => ParameterNames?.Any() == true;
 
+        /// <param name="parameterNames">A list of named parameters to validate</param>
         public ValidateAttribute(params string[] parameterNames)
         {
             ParameterNames = parameterNames.ToList();
