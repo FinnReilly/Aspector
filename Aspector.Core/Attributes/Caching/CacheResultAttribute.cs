@@ -1,5 +1,6 @@
 ﻿namespace Aspector.Core.Attributes.Caching
 {
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class CacheResultAttribute<TResult> : AspectAttribute
     {
         private object? _cacheKey;
