@@ -79,30 +79,30 @@ namespace Aspector.Core.Tests.Models.Registration
                 new AspectAttribute[]
                 {
                     new LogAttribute("Logging"),
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log after cache")
                 },
                 new AspectAttribute[] {},
                 new List<(Type, int)>
                 {
                     (typeof(LogAttribute), 0),
-                    (typeof(CacheResultAttribute), 0),
+                    (typeof(AttributeA), 0),
                     (typeof(LogAttribute), 1),
                 });
 
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log after cache")
                 },
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new AddLogPropertyAttribute("Constant Prop", "CONSTANT"),
                     new LogAttribute("Log after cache and add log property")
                 },
@@ -111,55 +111,55 @@ namespace Aspector.Core.Tests.Models.Registration
                 {
                     (typeof(LogAttribute), 0),
                     (typeof(AddLogPropertyAttribute), 0),
-                    (typeof(CacheResultAttribute), 0)
+                    (typeof(AttributeA), 0)
                 });
 
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("log after cache")
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("log before cache"),
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("log before all"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new AddLogPropertyAttribute("ContextKey") { ConstantValue = 0 },
                 },
                 new List<(Type, int)>
                 {
                     (typeof(AddLogPropertyAttribute), 0),
-                    (typeof(CacheResultAttribute), 0),
+                    (typeof(AttributeA), 0),
                     (typeof(LogAttribute), 0),
-                    (typeof(CacheResultAttribute), 1)
+                    (typeof(AttributeA), 1)
                 });
 
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 0 },
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 1 },
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Some logging or other", LogLevel.Debug)
                 },
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 2 },
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                 },
                 new List<(Type, int)>
                 {
                     (typeof(LogAttribute), 0),
-                    (typeof(CacheResultAttribute), 0),
+                    (typeof(AttributeA), 0),
                     (typeof(AddLogPropertyAttribute), 0)
                 });
 
@@ -167,36 +167,36 @@ namespace Aspector.Core.Tests.Models.Registration
             //    new AspectAttribute[]
             //    {
             //        new LogAttribute("Outermost"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //        new LogAttribute("Log something else"),
             //        new LogAttribute("Log another thing just to test aggregation"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //        new LogAttribute("Log something"),
             //        new AddLogPropertyAttribute("Innermost"),
             //    },
             //    new AspectAttribute[]
             //    {
             //        new LogAttribute("Outermost"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //        new LogAttribute("More logging"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //        new LogAttribute("Should also be layer 0"),
             //        new LogAttribute("Should be layer 0")
             //    },
             //    new AspectAttribute[]
             //    {
             //        new LogAttribute("Outermost"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //        new LogAttribute("This is layer 1"),
-            //        new CacheResultAttribute(),
+            //        new AttributeA(),
             //    },
             //    new List<(Type, int)>
             //    {
             //        (typeof(AddLogPropertyAttribute), 0),
             //        (typeof(LogAttribute), 0),
-            //        (typeof(CacheResultAttribute), 0),
+            //        (typeof(AttributeA), 0),
             //        (typeof(LogAttribute), 1),
-            //        (typeof(CacheResultAttribute), 1),
+            //        (typeof(AttributeA), 1),
             //        (typeof(LogAttribute), 2)
             //    });
         }
@@ -207,11 +207,11 @@ namespace Aspector.Core.Tests.Models.Registration
                 new AspectAttribute[]
                 {
                     new LogAttribute("Logging"),
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log after cache")
                 },
                 new AspectAttribute[] { });
@@ -219,12 +219,12 @@ namespace Aspector.Core.Tests.Models.Registration
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log after cache")
                 },
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new AddLogPropertyAttribute("Constant Prop", "CONSTANT"),
                     new LogAttribute("Log after cache and add log property")
                 },
@@ -233,18 +233,18 @@ namespace Aspector.Core.Tests.Models.Registration
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("log after cache")
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("log before cache"),
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("log before all"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new AddLogPropertyAttribute("ContextKey") { ConstantValue = 0 }
                 });
 
@@ -252,46 +252,46 @@ namespace Aspector.Core.Tests.Models.Registration
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 0 },
-                    new CacheResultAttribute()
+                    new AttributeA()
                 },
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 1 },
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Some logging or other", LogLevel.Debug)
                 },
                 new AspectAttribute[]
                 {
                     new AddLogPropertyAttribute("Method") { ConstantValue = 2 },
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                 });
 
             yield return new TestCaseData(
                 new AspectAttribute[]
                 {
                     new LogAttribute("Outermost"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log something else"),
                     new LogAttribute("Log another thing just to test aggregation"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Log something"),
                     new AddLogPropertyAttribute("Innermost"),
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("Outermost"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("More logging"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("Should also be layer 0"),
                     new LogAttribute("Should be layer 0")
                 },
                 new AspectAttribute[]
                 {
                     new LogAttribute("Outermost"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                     new LogAttribute("This is layer 1"),
-                    new CacheResultAttribute(),
+                    new AttributeA(),
                 });
         }
     }
@@ -312,5 +312,10 @@ namespace Aspector.Core.Tests.Models.Registration
         {
 
         }
+    }
+
+    public class AttributeA : AspectAttribute
+    {
+
     }
 }

@@ -14,8 +14,8 @@
         }
 
         /// <inheritdoc/>
-        public AddLogPropertyAsyncAttribute(string contextKey, object? constantValue) 
-            : base(contextKey, constantValue)
+        public AddLogPropertyAsyncAttribute(string contextKey) 
+            : base(contextKey)
         {
         }
     }
