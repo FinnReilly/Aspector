@@ -11,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IWeatherService, WeatherService>();
 builder.Services.AddDbContext<ExampleContext>(
     opt => 
-        opt.UseSqlite(new SqliteConnection("Filename=:memory:")));
+        opt.UseSqlite(new SqliteConnection("Data Source=Application.db;Cache=Shared")));
+builder.Services.AddHostedService<DataSeeder>();
 
 builder.Services.AddAspects();
 
