@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes;
 using Aspector.Core.Models;
+using Aspector.Core.Models.Registration;
 using Aspector.Core.Services;
 using Aspector.Core.Static;
 using Castle.DynamicProxy;
@@ -60,7 +61,29 @@ namespace Aspector.Core.Decorators
         
         protected ILogger GetLogger(DecorationContext context) => _loggerFactory.CreateLogger(LoggerName(context.DecoratedType));
 
-        public virtual Task ValidateUsageOrThrowAsync(IEnumerable<ParameterInfo> parameters, MethodInfo method, TAspect parameter, CancellationToken token)
+        public virtual Task ValidateUsagesAsync(
+            IEnumerable<ParameterInfo> parameters,
+            MethodInfo method, 
+            AspectAttributeLayer aspectParameters,
+            Action<Exception> onException,
+            CancellationToken token)
+        {
+            return Task.WhenAll(
+                aspectParameters.Where(asp => asp is TAspect).Select(
+                    async asp =>
+                    {
+                        try
+                        {
+                            await ValidateUsageOrThrowAsync(parameters, method, (TAspect)asp, token);
+                        }
+                        catch (Exception ex) 
+                        {
+                            onException?.Invoke(ex);
+                        }
+                    }));
+        }
+
+        protected virtual Task ValidateUsageOrThrowAsync(IEnumerable<ParameterInfo> parameters, MethodInfo method, TAspect parameter, CancellationToken token)
         {
             return Task.CompletedTask;
         }

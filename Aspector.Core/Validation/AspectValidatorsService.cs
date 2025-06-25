@@ -47,16 +47,12 @@ namespace Aspector.Core.Validation
                                 parameters,
                                 method,
                                 layer,
+                                onException: e => RecordUsageException(e, allExceptions),
                                 cancellationToken);
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError(
-                                e,
-                                "An error was thrown while analysing aspect usage within your application : {ExceptionMessage}",
-                                e.InnerException?.Message ?? e.Message);
-
-                            allExceptions.Add(e.InnerException ?? e);
+                            RecordUsageException(e, allExceptions);
                         }
                     }
                 }
@@ -71,21 +67,29 @@ namespace Aspector.Core.Validation
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
+        private void RecordUsageException(Exception exception, List<Exception> exceptionCollection)
+        {
+            _logger.LogError(
+                exception,
+                "An error was thrown while analysing aspect usage within your application : {ExceptionMessage}",
+                exception.InnerException?.Message ?? exception.Message);
+
+            exceptionCollection.Add(exception.InnerException ?? exception);
+        }
+
         private Task ValidateForAttribute(
             Type implementedDecoratorType,
             IEnumerable<ParameterInfo> parameters,
             MethodInfo method,
             AspectAttributeLayer actualAspectAttributes,
+            Action<Exception> onException,
             CancellationToken token)
         {
             var service = _serviceProvider.GetRequiredKeyedService(implementedDecoratorType, actualAspectAttributes.LayerIndex);
 
-            var methodToCall = implementedDecoratorType.GetMethod(nameof(BaseDecorator<AspectAttribute>.ValidateUsageOrThrowAsync));
-            var allMethodCalls = actualAspectAttributes.Select(
-                attr =>
-                    (Task)methodToCall!.Invoke(service, [parameters, method, attr, token])!);
+            var methodToCall = implementedDecoratorType.GetMethod(nameof(BaseDecorator<AspectAttribute>.ValidateUsagesAsync));
 
-            return Task.WhenAll(allMethodCalls);
+            return (Task)methodToCall!.Invoke(service, [parameters, method, actualAspectAttributes, onException, token])!;
         }
     }
 }

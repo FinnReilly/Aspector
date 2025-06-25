@@ -46,7 +46,7 @@ namespace Aspector.Core.Decorators
             DecorationContext context,
             IEnumerable<TAspect> aspectParameters);
 
-        public override Task ValidateUsageOrThrowAsync(
+        protected override Task ValidateUsageOrThrowAsync(
             IEnumerable<ParameterInfo> parameters,
             MethodInfo method,
             TAspect parameter,

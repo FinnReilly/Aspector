@@ -26,7 +26,7 @@ namespace Aspector.Core.Decorators.Validation
             return [];
         }
 
-        public override Task ValidateUsageOrThrowAsync(
+        protected override Task ValidateUsageOrThrowAsync(
             IEnumerable<ParameterInfo> parameters,
             MethodInfo method,
             TAspect parameter,
