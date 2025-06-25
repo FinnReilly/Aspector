@@ -101,11 +101,6 @@ namespace Aspector.Core.Extensions
                         var matchingAssignableTypes = assignableTypes.Where(
                             aType =>
                             {
-                                if (t == typeof(CacheResultAsyncDecorator<>))
-                                {
-                                    var x = 1;
-                                }
-
                                 if (typeIsNonConstructedGeneric)
                                 {
                                     var isAssignable = false;
