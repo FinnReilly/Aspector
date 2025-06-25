@@ -73,3 +73,16 @@ Layering means that the second,  (warning) Log message will only be logged if th
 > *For this reason, you are strongly advised not to rely on instance state in your own Decorator implementations.  In larger applications it may become difficult to know which Decorator instance will be executing in which context and cause unexpected behaviour.  If you do need to use state in your Decorators, do so via a dependency.*
 
 Another point to bear in mind with layering is that Decorator code which executes *after* the targeted method will execute in the reverse order that they are added in code.
+
+#### Using attributes
+
+Using attributes in any context in C# has its own set of limitations which it is useful to be aware of, such as:
+
+* All constructor parameters must be constant values which are known at compile time
+    * strings, numeric types or `Type` are all valid types
+    * arrays of value types, strings, or `Type`s are also permitted (but other types of collection/`IEnumerable` are not)
+    * array parameters can be represented as `params []` if required
+    * other parameter types such as `DateTime` may need to be represented as strings
+* Any attributes which take generic parameters must be used as _constructed_ generic types:
+    * `[CacheResult<Person>(timeToCacheSeconds: 10)]` will work
+    * `[CacheResult<T>(timeToCacheSeconds: 10)]` will cause a compiler error

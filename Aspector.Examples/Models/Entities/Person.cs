@@ -1,6 +1,6 @@
 ﻿namespace Aspector.Examples.Models.Entities
 {
-    public class Person
+    public class Person : IHasId
     {
         public int Id { get; set; }
         public string Name { get; set; }
