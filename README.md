@@ -20,7 +20,7 @@ public async Task<Person> GetPerson()
 }
 `````````````
 
-> [IMPORTANT]
+> [!IMPORTANT]
 >
 > The method you decorate must be present on an interface which is registered in your dependency injection container.  Other methods will not be affected by the use of these attributes.
 
