@@ -23,6 +23,10 @@ public async Task<Person> GetPerson()
 > [!IMPORTANT]
 >
 > The method you decorate must be present on an interface which is registered in your dependency injection container.  Other methods will not be affected by the use of these attributes.
+>
+> This also means that calls to a decorated method from within the same class will not (currently) be affected.
+> 
+> Aspector is effective for decorating incoming method calls made from other dependencies
 
 
 Next, in `Program` add **Aspector**'s services to the Dependency Injection container, before the call to `WebApplicationBuilder.Build` but *after* registering your application's services:
@@ -101,3 +105,5 @@ Take, for example, the class in the Examples project of this repo - `Repository<
 
 #### Non-interface Methods
 Given its focus as a framework for using Aspect-Oriented programming within dependency injection, Aspector does not currently support the use of aspects on methods which do not appear an interface which is registered as a service type.  Using them on any methods which are _not_ present on an interface registered in your DI container is not in fact guaranteed to do anything at all.
+
+Additionally (as mentioned above) calls to a decorated method from within the same class will not be affected.
