@@ -19,6 +19,12 @@ public async Task<Person> GetPerson()
     ...
 }
 `````````````
+
+> [IMPORTANT]
+>
+> The method you decorate must be present on an interface which is registered in your dependency injection container.  Other methods will not be affected by the use of these attributes.
+
+
 Next, in `Program` add **Aspector**'s services to the Dependency Injection container, before the call to `WebApplicationBuilder.Build` but *after* registering your application's services:
 
 `````````````
