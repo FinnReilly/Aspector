@@ -48,6 +48,37 @@ This document refers to certain elements of the library using specific terms who
 * *Decorator* - The concrete implementation of an "Aspect" or cross-cutting concern as recognised by Aspector.  These will all ultimately derive from `BaseDecorator<TAspect>` where `TAspect` is an `AspectAttribute`
 * *Aspect* - Used here to describe both the general concept of an Aspect as a cross-cutting concern and the unique pairing  of an *Aspect Attribute* with a *Decorator* which allows Aspector to detect which Aspect is being used
 
+### Writing your own aspects
+
+In order to write your own aspects, you must create two separate classes:
+
+1) An Aspect Attribute class which derives from `AspectAttribute`
+2) A Decorator class which derives from `BaseDecorator<TAspect>` (where `TAspect` is the attribute you just created)
+
+Unlike your DI registered services, you do not need to register your decorator class.  `AddAspects` will register decorators as and when they are needed based on your usage of them.
+
+> [!WARNING]
+>
+> Each aspect attribute type can be associated with only one decorator type or Aspector will throw an error.
+>
+> For instance, writing two decorators that both inherit from `BaseDecorator<MyAspectAttribute>` will cause your application to fail on startup.
+
+Aspector offers a number of utility base classes to simplify the process of writing your own aspects.  The four most general of these are:
+
+* `VoidDecorator<TAspect>` - designed for use on void methods or in cases where the return value of the method is of no concern.  For instance, the provided `LogDecorator` implementation is derived from `VoidDecorator<LogAttribute>`
+* `ResultDecorator<TAspect, TResult>` - useful when your aspect needs to know the result of the targeted method. For instance, the provided `CacheResultDecorator<T>` implementation is derived from `ResultDecorator<CacheResultAttribute<TResult>, TResult>`
+* `AsyncDecorator<TAspect>` - similar to the `VoidDecorator<TAspect>`, this is useful when the result of an awaitable task is of no concern, but it needs to be awaited for the decorator to work effectively.  For example, you may want to ensure that a scoped is closed only after a target method's returned `Task` has finished executing, as with the provided `AddLogPropertyAsyncDecorator` (derived from `AsyncDecorator<LogPropertyAttribute>`)
+* `AsyncResultDecorator<TAspect, TResult>` - use this base type when your aspect needs to know the result of an awaitable task which is returned from a targeted method.
+
+Using these four base classes will generally be a lot easier than directly using `BaseDecorator<TAspect>`.  First of all,  each provides an easily overridable `Decorate` method which will be called by Aspector's infrastructure when the target method is called.  This method will generally be passed a delegate representing the target method, a list of `TAspect` parameters from the current attribute layer, the current target method parameters, and key metadata about the target class and method contained within a `DecorationContext` object.
+
+### Aspect Usage validation
+
+Aspector offers you the option to build in your own validation of how aspects are used in a project.  There are two key ways to do this:
+
+1) `ValidateUsageOrThrowAsync` - overriding this method on `BaseDecorator<TAspect>` allows you to validate the appropriateness of each aspect attribute (`TAspect`) in turn when applied to a method. A typical use case would be to check that a list of parameter names used in an attribute were actually present on the targeted method.  Throwing an error here will log an error message and shut down the application on startup
+2) `ValidateUsagesAsync` - you can override this method from `BaseDecorator<TAspect>` in order to validate a group of attributes in a layer (a group of adjacent attributes of the same type - see below) on the same target method. Ensure that the `onException` delegate in this method is used if you want more than one error to appear in your logs here. As with `ValidateUsageOrThrowAsync`, throwing an exception from here will cause the application to shut down (as will calling `onException`)
+
 ### Some important concepts and limitations
 
 #### Attribute Decorator Pairing
