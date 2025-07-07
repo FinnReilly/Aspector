@@ -135,6 +135,6 @@ If you wish to use Aspect Attributes in a generic class, this cannot then be reg
 Take, for example, the class in the Examples project of this repo - `Repository<TEntity>`.  Registering such a class like `services.AddScoped<IRepository<Person>, Repository<Person>>()` will work, while `services.AddScoped(typeof(IRepository<>), typeof(Repository<>))` will currently throw an error on startup.
 
 #### Non-interface Methods
-Given its focus as a framework for using Aspect-Oriented programming within dependency injection, Aspector does not currently support the use of aspects on methods which do not appear an interface which is registered as a service type.  Using them on any methods which are _not_ present on an interface registered in your DI container is not in fact guaranteed to do anything at all.
+Given its focus as a framework for using Aspect-Oriented programming within dependency injection, Aspector does not currently support the use of aspects on methods which do not appear an interface that is registered as a service type.  Using them on any methods which are _not_ present on an interface registered in your DI container is not in fact guaranteed to do anything at all.
 
 Additionally (as mentioned above) calls to a decorated method from within the same class will not be affected.
