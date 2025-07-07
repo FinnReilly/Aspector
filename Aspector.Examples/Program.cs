@@ -1,5 +1,6 @@
 using Aspector.Core.Extensions;
 using Aspector.Examples.Data;
+using Aspector.Examples.Models.Entities;
 using Aspector.Examples.Services.Repository;
 using Aspector.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ builder.Services.AddDbContext<ExampleContext>(
     opt => 
         opt.UseSqlite(new SqliteConnection("Data Source=Application.db;Cache=Shared")));
 builder.Services.AddHostedService<DataSeeder>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IRepository<Person>), typeof(Repository<Person>));
 
 builder.Services.AddAspects();
 

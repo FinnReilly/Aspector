@@ -86,3 +86,12 @@ Using attributes in any context in C# has its own set of limitations which it is
 * Any attributes which take generic parameters must be used as _constructed_ generic types:
     * `[CacheResult<Person>(timeToCacheSeconds: 10)]` will work
     * `[CacheResult<T>(timeToCacheSeconds: 10)]` will cause a compiler error
+
+#### Open Generics
+
+If you wish to use Aspect Attributes in a generic class, this cannot then be registered as an open generic binding; this is not yet supported.  
+
+Take, for example, the class in the Examples project of this repo - `Repository<TEntity>`.  Registering such a class like `services.AddScoped<IRepository<Person>, Repository<Person>>()` will work, while `services.AddScoped(typeof(IRepository<>), typeof(Repository<>))` will currently throw an error on startup.
+
+#### Non-interface Methods
+Given its focus as a framework for using Aspect-Oriented programming within dependency injection, Aspector does not currently support the use of aspects on methods which do not appear an interface which is registered as a service type.  Using them on any methods which are _not_ present on an interface registered in your DI container is not in fact guaranteed to do anything at all.
