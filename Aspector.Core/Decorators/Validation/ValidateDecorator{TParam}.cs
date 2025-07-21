@@ -48,7 +48,7 @@ namespace Aspector.Core.Decorators.Validation
                 }
             }
 
-            return Task.CompletedTask;
+            throw new InvalidOperationException("No parameter names provided");
         }
     }
 }

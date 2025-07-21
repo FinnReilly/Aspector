@@ -12,6 +12,7 @@
 
         /// <param name="parameterNames">A list of named parameters to validate</param>
         public ValidateAttribute(params string[] parameterNames)
+            : base()
         {
             ParameterNames = parameterNames.ToList();
         }

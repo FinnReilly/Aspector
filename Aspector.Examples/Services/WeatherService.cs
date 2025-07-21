@@ -1,5 +1,6 @@
 ﻿using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Attributes.Logging;
+using Aspector.Examples.Attributes;
 using Aspector.Models;
 
 namespace Aspector.Services
@@ -50,9 +51,23 @@ namespace Aspector.Services
 
         [CacheResultAsync<IEnumerable<WeatherForecast>>(timeToCacheSeconds: 5.2, cacheKeyParameter: "n")]
         [Log("No cached result found for {weatherForecastCount}, fetching fresh data", LogLevel.Warning, "n")]
-        public Task<IEnumerable<WeatherForecast>> GetWeatherAsync(int n)
+        public async Task<IEnumerable<WeatherForecast>> GetWeatherAsync(int n)
         {
-            return Task.FromResult(GetWeatherForNextNDays(n));
+            await Task.Delay(500);
+
+            return GetWeatherForNextNDays(n);
+        }
+
+        [Log("Validating Date Time {MinimumDate}", LogLevel.Information, "minimumDateUtc")]
+        [ValidateDateAfterNow("minimumDateUtc")]
+        [Log("Validation passed, continuing")]
+        public async Task<IEnumerable<WeatherForecast>> GetWeatherForNextNDaysFromAsync(int n, DateTime minimumDateUtc)
+        {
+            var allWeather = GetWeatherForNextNDays(n);
+
+            await Task.Delay(500);
+
+            return allWeather.Where(w => new DateTime(w.Date, TimeOnly.MinValue) > minimumDateUtc);
         }
     }
 }
