@@ -184,37 +184,62 @@ namespace Aspector.Core.Models.Registration
         public Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>> LayersByType { get; } = new Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>>();
     }
 
-    public class AspectCoordinate
+    public class Coordinate
     {
         public int RowIndex { get; }
         public int ColumnIndex { get; }
 
-        public Type Type { get; }
-
-        public AspectCoordinate(int rowIndex, int columnIndex, Type type)
+        public Coordinate(int rowIndex, int columnIndex)
         {
             RowIndex = rowIndex;
             ColumnIndex = columnIndex;
+        }
+
+        public override string ToString()
+        {
+            return $"({RowIndex}, {ColumnIndex})";
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj is Coordinate other)
+            {
+                return RowIndex == other.RowIndex && ColumnIndex == other.ColumnIndex;
+            }
+            return false;
+        }
+        public override int GetHashCode()
+        {
+            return (int) RowIndex ^ ColumnIndex;
+        }
+    }
+
+    public class AspectCoordinate : Coordinate
+    {
+        public Type Type { get; }
+
+        public AspectCoordinate(int rowIndex, int columnIndex, Type type)
+            : base(rowIndex, columnIndex)
+        {
             Type = type;
         }
 
         public override string ToString()
         {
-            return $"{Type.Name} at ({RowIndex}, {ColumnIndex})";
+            return $"{Type.Name} at {base.ToString()}";
         }
 
         public override bool Equals(object? obj)
         {
             if (obj is AspectCoordinate other)
             {
-                return RowIndex == other.RowIndex && ColumnIndex == other.ColumnIndex && Type == other.Type;
+                return base.Equals(other) && Type == other.Type;
             }
             return false;
         }
 
         public override int GetHashCode()
         {
-            return (int) RowIndex ^ ColumnIndex ^ Type.GetHashCode();
+            return (int)base.GetHashCode() ^ Type.GetHashCode();
         }
     }
 }
