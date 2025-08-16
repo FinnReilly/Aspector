@@ -183,4 +183,38 @@ namespace Aspector.Core.Models.Registration
         public Dictionary<MethodInfo, List<AspectAttributeLayer>> LayersFromInnermostByMethod { get; } = new Dictionary<MethodInfo, List<AspectAttributeLayer>>();
         public Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>> LayersByType { get; } = new Dictionary<MethodInfo, Dictionary<Type, Dictionary<int, AspectAttributeLayer>>>();
     }
+
+    public class AspectCoordinate
+    {
+        public int RowIndex { get; }
+        public int ColumnIndex { get; }
+
+        public Type Type { get; }
+
+        public AspectCoordinate(int rowIndex, int columnIndex, Type type)
+        {
+            RowIndex = rowIndex;
+            ColumnIndex = columnIndex;
+            Type = type;
+        }
+
+        public override string ToString()
+        {
+            return $"{Type.Name} at ({RowIndex}, {ColumnIndex})";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is AspectCoordinate other)
+            {
+                return RowIndex == other.RowIndex && ColumnIndex == other.ColumnIndex && Type == other.Type;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return (int) RowIndex ^ ColumnIndex ^ Type.GetHashCode();
+        }
+    }
 }

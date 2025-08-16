@@ -1,7 +1,5 @@
 ﻿using Aspector.Core.Attributes;
-using Aspector.Core.Attributes.Caching;
 using Aspector.Core.Attributes.Logging;
-using Aspector.Core.Models;
 using Aspector.Core.Models.Registration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -163,42 +161,42 @@ namespace Aspector.Core.Tests.Models.Registration
                     (typeof(AddLogPropertyAttribute), 0)
                 });
 
-            //yield return new TestCaseData(
-            //    new AspectAttribute[]
-            //    {
-            //        new LogAttribute("Outermost"),
-            //        new AttributeA(),
-            //        new LogAttribute("Log something else"),
-            //        new LogAttribute("Log another thing just to test aggregation"),
-            //        new AttributeA(),
-            //        new LogAttribute("Log something"),
-            //        new AddLogPropertyAttribute("Innermost"),
-            //    },
-            //    new AspectAttribute[]
-            //    {
-            //        new LogAttribute("Outermost"),
-            //        new AttributeA(),
-            //        new LogAttribute("More logging"),
-            //        new AttributeA(),
-            //        new LogAttribute("Should also be layer 0"),
-            //        new LogAttribute("Should be layer 0")
-            //    },
-            //    new AspectAttribute[]
-            //    {
-            //        new LogAttribute("Outermost"),
-            //        new AttributeA(),
-            //        new LogAttribute("This is layer 1"),
-            //        new AttributeA(),
-            //    },
-            //    new List<(Type, int)>
-            //    {
-            //        (typeof(AddLogPropertyAttribute), 0),
-            //        (typeof(LogAttribute), 0),
-            //        (typeof(AttributeA), 0),
-            //        (typeof(LogAttribute), 1),
-            //        (typeof(AttributeA), 1),
-            //        (typeof(LogAttribute), 2)
-            //    });
+            yield return new TestCaseData(
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new AttributeA(),
+                    new LogAttribute("Log something else"),
+                    new LogAttribute("Log another thing just to test aggregation"),
+                    new AttributeA(),
+                    new LogAttribute("Log something"),
+                    new AddLogPropertyAttribute("Innermost"),
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new AttributeA(),
+                    new LogAttribute("More logging"),
+                    new AttributeA(),
+                    new LogAttribute("Should also be layer 0"),
+                    new LogAttribute("Should be layer 0")
+                },
+                new AspectAttribute[]
+                {
+                    new LogAttribute("Outermost"),
+                    new AttributeA(),
+                    new LogAttribute("This is layer 1"),
+                    new AttributeA(),
+                },
+                new List<(Type, int)>
+                {
+                    (typeof(AddLogPropertyAttribute), 0),
+                    (typeof(LogAttribute), 0),
+                    (typeof(AttributeA), 0),
+                    (typeof(LogAttribute), 1),
+                    (typeof(AttributeA), 1),
+                    (typeof(LogAttribute), 2)
+                });
         }
 
         public static IEnumerable<TestCaseData> ConstructorTestCases_Permissive()
